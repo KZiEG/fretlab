@@ -3,13 +3,15 @@ import Home from './pages/Home.jsx'
 import Trainer from './pages/Trainer.jsx'
 import Chords from './pages/Chords.jsx'
 import Scales from './pages/Scales.jsx'
-import { applyAnswer, loadState, saveState } from './progress.js'
+import Internalize from './pages/Internalize.jsx'
+import { applyAnswer, applyDrill, loadState, saveState } from './progress.js'
 
 const ROUTES = [
   ['home', 'Home'],
   ['trainer', 'Trainer'],
   ['chords', 'Chords'],
   ['scales', 'Scales'],
+  ['fretboard', 'Fretboard'],
 ]
 
 const readRoute = () => {
@@ -36,6 +38,10 @@ export default function App() {
     (s, f, correct, ms) => setProgress((p) => applyAnswer(p, s, f, correct, ms)),
     [],
   )
+  const recordDrill = useCallback(
+    (key, ms, mistakes) => setProgress((p) => applyDrill(p, key, ms, mistakes)),
+    [],
+  )
   const updateSettings = useCallback(
     (patch) => setProgress((p) => ({ ...p, settings: { ...p.settings, ...patch } })),
     [],
@@ -52,6 +58,7 @@ export default function App() {
         {route === 'trainer' && <Trainer progress={progress} answer={answer} updateSettings={updateSettings} />}
         {route === 'chords' && <Chords />}
         {route === 'scales' && <Scales />}
+        {route === 'fretboard' && <Internalize progress={progress} answer={answer} recordDrill={recordDrill} />}
       </main>
 
       <nav className="tabbar">

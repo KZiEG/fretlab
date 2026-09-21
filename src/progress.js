@@ -27,7 +27,7 @@ export const defaultSettings = {
 }
 
 export function emptyState() {
-  return { version: 1, cells: {}, xp: 0, days: {}, settings: { ...defaultSettings } }
+  return { version: 1, cells: {}, xp: 0, days: {}, drills: {}, settings: { ...defaultSettings } }
 }
 
 export function loadState() {
@@ -148,4 +148,16 @@ export function pickCard(state, strings, maxFret, lastKey, now = Date.now()) {
   }
   const last = pool[pool.length - 1]
   return { s: last.s, f: last.f }
+}
+
+// Record a finished drill. Best run = lowest time with 3 seconds added per mistake.
+export function drillScore(ms, mistakes) {
+  return ms + mistakes * 3000
+}
+
+export function applyDrill(state, key, ms, mistakes) {
+  const score = drillScore(ms, mistakes)
+  const prev = state.drills?.[key]
+  const best = !prev || score < prev.best.score ? { ms, mistakes, score } : prev.best
+  return { ...state, drills: { ...state.drills, [key]: { runs: (prev?.runs ?? 0) + 1, best } } }
 }

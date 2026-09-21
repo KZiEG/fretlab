@@ -21,10 +21,11 @@ const R = 13
 /**
  * Interactive fretboard. Strings are 0..5 (low E to high e).
  * marks: [{ s, f, kind, label, color }] where kind picks the style:
- *   root | note | target | correct | wrong | heat
+ *   root | note | from | target | correct | wrong | heat | ghost
+ * links: [{ from: { s, f }, to: { s, f } }] draws an arrow between two positions
  * Portrait phones get a vertical neck (nut at the top), wide screens horizontal.
  */
-export default function Fretboard({ frets = 12, marks = [], onCell, highlightString = null }) {
+export default function Fretboard({ frets = 12, marks = [], links = [], onCell, highlightString = null }) {
   const horizontal = useWide()
   const L = horizontal ? H : V
 
@@ -109,12 +110,34 @@ export default function Fretboard({ frets = 12, marks = [], onCell, highlightStr
       role="img"
       aria-label="Guitar fretboard"
     >
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path className="arrow-head" d="M0 0L10 5L0 10z" />
+        </marker>
+      </defs>
       {inlays}
       {lines}
       {nut}
       {strings}
       {fretNumbers}
       {stringNames}
+
+      {links.map((l, i) => {
+        const [x1, y1] = pos(l.from.s, l.from.f)
+        const [x2, y2] = pos(l.to.s, l.to.f)
+        const len = Math.hypot(x2 - x1, y2 - y1) || 1
+        const ux = (x2 - x1) / len
+        const uy = (y2 - y1) / len
+        return (
+          <line
+            key={`link${i}`}
+            className="link"
+            x1={x1 + ux * (R + 2)} y1={y1 + uy * (R + 2)}
+            x2={x2 - ux * (R + 4)} y2={y2 - uy * (R + 4)}
+            markerEnd="url(#arrow)"
+          />
+        )
+      })}
 
       {onCell &&
         Array.from({ length: 6 }, (_, s) =>

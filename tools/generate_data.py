@@ -6,6 +6,7 @@ to src/data/*.json. Pure standard library, no installs needed.
 
 Run from the project root:  python tools/generate_data.py
 """
+import itertools
 import json
 from pathlib import Path
 
@@ -35,6 +36,24 @@ QUALITIES = [
     ("m7b5", "Half-diminished", "m7b5", [0, 3, 6, 10], [], 4),
     ("aug", "Augmented", "aug", [0, 4, 8], [], 4),
 ]
+
+# One short line per chord type, shown under the chord name
+DESCRIPTIONS = {
+    "maj": "Bright, happy and stable. The 'home' sound of most songs.",
+    "min": "Darker and more serious than major. Sad, moody or tender.",
+    "5": "Just the root and the 5th, so it is neither major nor minor. Big and punchy, the backbone of rock.",
+    "7": "A major chord with a bluesy flat 7th. Tense: it wants to resolve to another chord.",
+    "maj7": "A major chord with a major 7th. Smooth, dreamy and a little jazzy.",
+    "m7": "A minor chord with a flat 7th. Mellow, relaxed and soulful.",
+    "sus2": "The 3rd is swapped for the 2nd. Open and airy, neither major nor minor.",
+    "sus4": "The 3rd is swapped for the 4th. Tense and unresolved; often falls back to major.",
+    "add9": "A major chord plus the 9th (no 7th). Bright and shimmery.",
+    "6": "A major chord plus the 6th. Sweet and vintage, a classic ending chord.",
+    "9": "A dominant 7th plus the 9th. Funky and fuller than a plain 7th.",
+    "dim": "Two stacked minor 3rds. Tense and unstable; pulls strongly toward the next chord.",
+    "m7b5": "A diminished triad with a flat 7th (half-diminished). Dark and moody, common in jazz.",
+    "aug": "A major chord with a raised 5th. Dreamy and uneasy; it sounds like it is going somewhere.",
+}
 
 DEGREE = {0: "1", 1: "b2", 2: "2", 3: "b3", 4: "3", 5: "4", 6: "b5",
           7: "5", 8: "#5", 9: "6", 10: "b7", 11: "7"}
@@ -142,7 +161,7 @@ def pick(found):
 def build_chords():
     qualities = [
         {"id": q[0], "name": q[1], "symbol": q[2], "intervals": q[3],
-         "degrees": chord_degrees(q[3])}
+         "degrees": chord_degrees(q[3]), "desc": DESCRIPTIONS[q[0]]}
         for q in QUALITIES
     ]
     voicings = {}
@@ -152,6 +171,67 @@ def build_chords():
             voicings[str(root)][qid] = pick(search_voicings(
                 root, intervals, optional, min_strings, MAX_STRINGS.get(qid, 6)))
     return {"tuning": TUNING, "qualities": qualities, "voicings": voicings}
+
+
+# ---------------------------------------------------------------- triads
+
+TRIADS = [
+    ("maj", "Major", [0, 4, 7]),
+    ("min", "Minor", [0, 3, 7]),
+    ("dim", "Diminished", [0, 3, 6]),
+    ("aug", "Augmented", [0, 4, 8]),
+]
+STRING_SETS = [[0, 1, 2], [1, 2, 3], [2, 3, 4], [3, 4, 5]]  # 6-5-4, 5-4-3, 4-3-2, 3-2-1
+
+
+def triad_shapes(root, intervals, sset):
+    """Closed triads (all three notes within an octave) on three adjacent strings.
+
+    Returns three lists of fret triples: root position, 1st inversion (3rd in
+    the bass) and 2nd inversion (5th in the bass), lowest position first.
+    Comfortable shapes (4-fret span) are preferred; a 5-fret stretch is only
+    used for an inversion that has nothing easier (some diminished shapes).
+    """
+    tones = [(root + i) % 12 for i in intervals]
+
+    def search(max_span):
+        out = [[], [], []]
+        for frets in itertools.product(range(MAX_FRET + 1), repeat=3):
+            midi = [TUNING[s] + f for s, f in zip(sset, frets)]
+            if not midi[0] < midi[1] < midi[2] or midi[2] - midi[0] > 11:
+                continue
+            pcs = [m % 12 for m in midi]
+            if sorted(pcs) != sorted(tones):
+                continue
+            fretted = [f for f in frets if f]
+            if fretted:
+                if max(fretted) - min(fretted) > max_span:
+                    continue
+                if len(fretted) < 3 and max(fretted) > 4:
+                    continue  # open strings only make sense near the nut
+            out[tones.index(pcs[0])].append(list(frets))
+        for inv in out:
+            inv.sort(key=lambda fr: (min((f for f in fr if f), default=0), fr))
+        return out
+
+    easy, stretch = search(3), search(4)
+    return [(easy[i] or stretch[i])[:2] for i in range(3)]
+
+
+def build_triads():
+    qualities = [
+        {"id": qid, "name": name + " triad", "intervals": iv,
+         "degrees": chord_degrees(iv), "desc": DESCRIPTIONS[qid]}
+        for qid, name, iv in TRIADS
+    ]
+    voicings = {
+        str(root): {
+            qid: [triad_shapes(root, iv, sset) for sset in STRING_SETS]
+            for qid, _n, iv in TRIADS
+        }
+        for root in range(12)
+    }
+    return {"stringSets": STRING_SETS, "qualities": qualities, "voicings": voicings}
 
 
 # ---------------------------------------------------------------- scales
@@ -230,11 +310,16 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     chords = build_chords()
     scales = build_scales()
+    triads = build_triads()
+    (OUT / "triads.json").write_text(json.dumps(triads, separators=(",", ":")))
     (OUT / "chords.json").write_text(json.dumps(chords, separators=(",", ":")))
     (OUT / "scales.json").write_text(json.dumps(scales, separators=(",", ":")))
     total = sum(len(v) for r in chords["voicings"].values() for v in r.values())
     print(f"chords.json: {total} voicings across "
           f"{len(chords['qualities'])} qualities x 12 roots")
+    n_tri = sum(len(inv) for r in triads["voicings"].values() for q in r.values()
+                for sset in q for inv in sset)
+    print(f"triads.json: {n_tri} triad shapes")
     print(f"scales.json: {len(scales['scales'])} scales x 12 roots")
 
 
