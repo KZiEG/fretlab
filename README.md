@@ -15,9 +15,11 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
 - **Fretboard** – *Octave shortcuts*: four patterns for finding the same note an octave (or two)
   higher, each with the rule, why it works, and an interactive fretboard with an arrow you can
   step along. *Timed drills*: (1) walk the natural notes along a string, (2) find 1-3 notes on
-  every string, (3) find 2-3 natural notes string by string. Each shows a map of what you are
-  looking for, times you, counts mistakes (+3 s each when comparing runs) and keeps personal
-  bests. Notes you hit first try also feed your Trainer levels.
+  every string, (3) find 2-3 natural notes string by string, (4) pick an octave shortcut and up
+  to 2 notes (any note) and find the octave from a given starting position. Each shows a map of
+  what you are looking for, times you, counts mistakes (+3 s each when comparing runs) and keeps
+  personal bests. Notes you hit first try also feed your Trainer levels. A metronome (start/stop,
+  40-220 BPM) sits above the drills, independent of the timer.
 - **Home** – level, XP, day streak, a colour-coded note map, and the notes needing attention.
 
 No accounts, no server, no cost. Progress is stored in the browser (localStorage); use
@@ -39,7 +41,7 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 | `src/theory.js` | Notes, tuning, helpers. |
 | `src/progress.js` | XP, levels, streaks and the decay model (constants at the top). |
 | `src/audio.js` | Plucked-string synth (Karplus-Strong), no audio files needed. |
-| `src/components/` | `Fretboard` (SVG, vertical on phones, horizontal on wide screens), `ChordDiagram`, `Triads`, `ShortcutCard` and `Drills`. |
+| `src/components/` | `Fretboard` (SVG, vertical on phones, horizontal on wide screens), `ChordDiagram`, `Triads`, `ShortcutCard`, `Drills` and `Metronome`. |
 | `src/pages/` | Home, Trainer, Chords, Scales, Internalize (the Fretboard tab). |
 
 ## Put it on your phone (free)

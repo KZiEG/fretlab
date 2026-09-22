@@ -55,3 +55,25 @@ export function strum(midis, gap = 0.045) {
 export function playSequence(midis, gap = 0.28) {
   midis.forEach((m, i) => pluck(m, i * gap, 0.5))
 }
+
+// A short click for the metronome, scheduled at a precise AudioContext time
+// (not routed through pluck's plucked-string buffer: this needs a plain, tight tick)
+export function scheduleClick(time, accent = false) {
+  const c = unlockAudio()
+  if (!c) return
+  const osc = c.createOscillator()
+  const gain = c.createGain()
+  osc.type = 'square'
+  osc.frequency.value = accent ? 1500 : 950
+  gain.gain.setValueAtTime(0.0001, time)
+  gain.gain.exponentialRampToValueAtTime(accent ? 0.3 : 0.18, time + 0.002)
+  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.045)
+  osc.connect(gain).connect(c.destination)
+  osc.start(time)
+  osc.stop(time + 0.05)
+}
+
+// The AudioContext's own clock, for scheduling the metronome precisely
+export function audioTime() {
+  return unlockAudio()?.currentTime ?? 0
+}
