@@ -12,9 +12,12 @@
   --root: #ef6461;
   --note: #4fb3c9;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tabbar-h: 58px;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* no double-tap zoom (or its tap delay) when answering quickly */
+button, a, summary, label { touch-action: manipulation; }
 
 html, body { margin: 0; background: var(--bg); color: var(--text); }
 body {
@@ -24,7 +27,7 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-.app { min-height: 100vh; padding-bottom: calc(72px + var(--safe-bottom)); }
+.app { min-height: 100vh; min-height: 100dvh; padding-bottom: calc(var(--tabbar-h) + 16px + var(--safe-bottom)); }
 .topbar {
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 8px;
   border-bottom: 1px solid var(--line);
@@ -48,10 +51,16 @@ p { margin: 0; }
   padding-bottom: var(--safe-bottom);
 }
 .tabbar a {
-  padding: 16px 2px; text-align: center; color: var(--muted);
-  text-decoration: none; font-weight: 600; font-size: 0.85rem;
+  height: var(--tabbar-h); padding: 8px 2px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  color: var(--muted); text-decoration: none; font-weight: 600; font-size: 0.72rem; letter-spacing: 0.01em;
+}
+.tabbar svg {
+  width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
 }
 .tabbar a.on { color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
+.tabbar a:active svg { transform: scale(0.9); }
 
 /* ---- buttons, chips */
 .btn {
@@ -66,7 +75,7 @@ p { margin: 0; }
 .btn.wide { width: 100%; }
 
 .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.chips.scroll { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+.chips.scroll { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 6px; scrollbar-width: none; }
 .chips.scroll::-webkit-scrollbar { display: none; }
 .chip {
   flex: 0 0 auto; background: var(--panel); color: var(--text); border: 1px solid var(--line);
@@ -109,6 +118,22 @@ p { margin: 0; }
 .mark-ghost circle { fill: #3a4050; r: 5; opacity: 0.8; }
 .mark-heat circle { opacity: 0.95; }
 @keyframes pulse { 50% { opacity: 0.55; } }
+
+.board-wrap { display: flex; flex-direction: column; }
+
+/* Name-the-note answers stay on screen while the neck scrolls behind them */
+.answer-pad { display: flex; flex-direction: column; gap: 8px; }
+.answer-pad .feedback { min-height: 1.45em; }
+@media (max-width: 819px) {
+  .answer-pad {
+    position: sticky; bottom: calc(var(--tabbar-h) + var(--safe-bottom)); z-index: 5;
+    margin: 0 -16px; padding: 8px 16px 10px;
+    background: var(--bg); border-top: 1px solid var(--line);
+  }
+  .answer-pad .note-btn { padding: 10px 4px; min-height: 46px; }
+}
+/* the prompt above the neck is always visible on wide screens */
+@media (min-width: 820px) { .pad-ask { visibility: hidden; } }
 
 .prompt { font-size: 1.15rem; text-align: center; padding: 4px 0; }
 .prompt strong { color: var(--accent); }

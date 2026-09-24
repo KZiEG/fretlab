@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { audioTime, scheduleClick } from '../audio.js'
+import { useWakeLock } from '../mobile.js'
 
 // Standard lookahead scheduler: a timer checks often, but every click is
 // scheduled against the AudioContext's own clock, so the tempo stays exact
@@ -20,6 +21,8 @@ export default function Metronome() {
   const nextTime = useRef(0)
   const beatCount = useRef(0)
   const timer = useRef(null)
+
+  useWakeLock(running)
 
   useEffect(() => () => clearInterval(timer.current), [])
 
