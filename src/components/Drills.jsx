@@ -7,6 +7,7 @@ import {
 } from '../theory.js'
 import { drillScore } from '../progress.js'
 import { pluck } from '../audio.js'
+import { buzzWrong, useWakeLock } from '../mobile.js'
 
 const MAX_FRET = 12 // exercises 1-3 stay in a beginner-friendly range
 const NOTE_COLORS = ['#4fb3c9', '#f0a93e', '#b08bf0']
@@ -141,6 +142,8 @@ function Runner({ steps, frets, subtitle, sound, answer, onDone, onCancel }) {
   const finished = useRef(false)
   const wrongTimer = useRef(null)
 
+  useWakeLock(true) // don't let the phone sleep mid-drill
+
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 100)
     return () => {
@@ -163,6 +166,7 @@ function Runner({ steps, frets, subtitle, sound, answer, onDone, onCancel }) {
     if (!ok) {
       stepMiss.current++
       totalMiss.current++
+      buzzWrong()
       setWrong({ s, f, kind: 'wrong', label: SHARP[pcAt(s, f)] })
       clearTimeout(wrongTimer.current)
       wrongTimer.current = setTimeout(() => setWrong(null), 600)

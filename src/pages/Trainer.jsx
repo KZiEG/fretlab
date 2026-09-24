@@ -3,6 +3,7 @@ import Fretboard from '../components/Fretboard.jsx'
 import { STRING_LABELS, STRING_ORDINALS, SHARP, fretsFor, midiAt, noteLabel, pcAt } from '../theory.js'
 import { pickCard } from '../progress.js'
 import { pluck } from '../audio.js'
+import { buzzRight, buzzWrong } from '../mobile.js'
 
 const RANGES = [
   [5, 'Frets 0–5'],
@@ -22,6 +23,8 @@ export default function Trainer({ progress, answer, updateSettings }) {
   const started = useRef(0)
   const lastKey = useRef(null)
   const timer = useRef(null)
+  const boardRef = useRef(null)
+  const padRef = useRef(null)
   const progressRef = useRef(progress)
   progressRef.current = progress
 
@@ -44,6 +47,19 @@ export default function Trainer({ progress, answer, updateSettings }) {
     return () => clearTimeout(timer.current)
   }, [next, settings.mode])
 
+  // On a phone the neck is taller than the screen: bring the asked fret into the
+  // part of the screen not covered by the sticky answer pad.
+  useEffect(() => {
+    if (!card || settings.mode === 'find') return
+    const mark = boardRef.current?.querySelector('.mark-target')
+    if (!mark) return
+    const r = mark.getBoundingClientRect()
+    const bottom = padRef.current?.getBoundingClientRect().top ?? window.innerHeight
+    if (r.top >= 40 && r.bottom <= bottom - 12) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollBy({ top: r.top + r.height / 2 - bottom / 2, behavior: reduce ? 'auto' : 'smooth' })
+  }, [card, settings.mode])
+
   // the first question is picked in an effect right after mount
   if (!card) return null
 
@@ -57,6 +73,8 @@ export default function Trainer({ progress, answer, updateSettings }) {
     setPhase(correct ? 'right' : 'wrong')
     setSession((s) => ({ n: s.n + 1, correct: s.correct + (correct ? 1 : 0) }))
     if (settings.sound) pluck(midiAt(card.s, card.f))
+    if (correct) buzzRight()
+    else buzzWrong()
     if (correct) timer.current = setTimeout(next, 900)
   }
 
@@ -121,35 +139,45 @@ export default function Trainer({ progress, answer, updateSettings }) {
         )}
       </div>
 
-      <Fretboard
-        frets={settings.maxFret}
-        marks={marks}
-        highlightString={isFind ? card.s : null}
-        onCell={isFind && phase === 'ask' ? onCell : undefined}
-      />
+      <div ref={boardRef} className="board-wrap">
+        <Fretboard
+          frets={settings.maxFret}
+          marks={marks}
+          highlightString={isFind ? card.s : null}
+          onCell={isFind && phase === 'ask' ? onCell : undefined}
+        />
+      </div>
 
       {hint && phase === 'ask' && <p className="hint">{hint}</p>}
-      {feedback}
+      {isFind && feedback}
 
       {!isFind && (
-        <div className="note-grid">
-          {SHARP.map((_, pc) => (
-            <button
-              key={pc}
-              className={
-                phase !== 'ask' && pc === target ? 'note-btn right'
-                  : phase === 'wrong' && picked?.pc === pc ? 'note-btn wrong' : 'note-btn'
-              }
-              disabled={phase !== 'ask'}
-              onClick={() => onNoteButton(pc)}
-            >
-              {noteLabel(pc)}
-            </button>
-          ))}
+        <div ref={padRef} className="answer-pad">
+          {feedback ?? (
+            <p className="feedback muted pad-ask">{STRING_ORDINALS[card.s]} string, fret {card.f}: which note?</p>
+          )}
+          <div className="note-grid">
+            {SHARP.map((_, pc) => (
+              <button
+                key={pc}
+                className={
+                  phase !== 'ask' && pc === target ? 'note-btn right'
+                    : phase === 'wrong' && picked?.pc === pc ? 'note-btn wrong' : 'note-btn'
+                }
+                disabled={phase !== 'ask'}
+                onClick={() => onNoteButton(pc)}
+              >
+                {noteLabel(pc)}
+              </button>
+            ))}
+          </div>
+          {phase === 'wrong' && (
+            <button className="btn primary wide" onClick={next}>Next</button>
+          )}
         </div>
       )}
 
-      {phase === 'wrong' && (
+      {isFind && phase === 'wrong' && (
         <button className="btn primary wide" onClick={next}>Next</button>
       )}
 

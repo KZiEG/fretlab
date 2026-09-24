@@ -22,6 +22,10 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   40-220 BPM) sits above the drills, independent of the timer.
 - **Home** – level, XP, day streak, a colour-coded note map, and the notes needing attention.
 
+On phones, the *Name the note* answer buttons stay pinned above the tab bar and the asked fret
+scrolls into view on its own. The screen stays awake during a timed drill or while the metronome
+runs. Wrong answers give a short buzz on phones that support vibration (Android).
+
 No accounts, no server, no cost. Progress is stored in the browser (localStorage); use
 Export / Import on the Home page to back up or move it between devices.
 
@@ -40,6 +44,7 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 | `tools/make_icons.py` | Python: draws the PWA icons in `public/`. |
 | `src/theory.js` | Notes, tuning, helpers. |
 | `src/progress.js` | XP, levels, streaks and the decay model (constants at the top). |
+| `src/mobile.js` | Phone helpers: vibration and the screen wake lock. |
 | `src/audio.js` | Plucked-string synth (Karplus-Strong), no audio files needed. |
 | `src/components/` | `Fretboard` (SVG, vertical on phones, horizontal on wide screens), `ChordDiagram`, `Triads`, `ShortcutCard`, `Drills` and `Metronome`. |
 | `src/pages/` | Home, Trainer, Chords, Scales, Internalize (the Fretboard tab). |
