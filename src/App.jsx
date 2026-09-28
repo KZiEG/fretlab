@@ -4,6 +4,7 @@ import Trainer from './pages/Trainer.jsx'
 import Chords from './pages/Chords.jsx'
 import Scales from './pages/Scales.jsx'
 import Internalize from './pages/Internalize.jsx'
+import Rig from './pages/Rig.jsx'
 import { applyAnswer, applyDrill, loadState, saveState } from './progress.js'
 
 const ROUTES = [
@@ -12,6 +13,7 @@ const ROUTES = [
   ['chords', 'Chords'],
   ['scales', 'Scales'],
   ['fretboard', 'Fretboard'],
+  ['rig', 'Rig'],
 ]
 
 // 24x24 stroke icons for the tab bar
@@ -34,6 +36,14 @@ const ICONS = {
   fretboard: (
     <>
       <path d="M3 7h18M3 12h18M3 17h18M7 5v14M12 5v14M17 5v14" />
+    </>
+  ),
+  rig: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <circle cx="9" cy="8" r="1.8" />
+      <circle cx="15" cy="8" r="1.8" />
+      <rect x="9" y="14" width="6" height="4" rx="1" />
     </>
   ),
 }
@@ -83,6 +93,7 @@ export default function App() {
         {route === 'chords' && <Chords />}
         {route === 'scales' && <Scales />}
         {route === 'fretboard' && <Internalize progress={progress} answer={answer} recordDrill={recordDrill} />}
+        {route === 'rig' && <Rig />}
       </main>
 
       <nav className="tabbar">
