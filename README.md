@@ -12,6 +12,9 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   note as it starts, and a metronome click marks every step (accented on a new note); both can be
   switched off. It picks the most natural English voice on the device (Premium/Enhanced/Natural
   voices first); a voice menu and Test button let you choose another.
+  You can also record the 12 note names in your own voice. Recordings are kept in the browser
+  (IndexedDB, not included in Export) and play through Web Audio, so on iPhone they reach AirPods
+  or a Waza-Air, where the built-in speech engine often uses the phone speaker.
 - **Chords** – 14 chord types in all 12 keys, each with a one-line description and several
   playable voicings from the nut up the neck. Tap a diagram to hear it strummed. Optionally
   show every chord tone on the whole neck. A **Triads** mode shows major, minor, diminished
@@ -54,6 +57,7 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 | `src/theory.js` | Notes, tuning, helpers. |
 | `src/progress.js` | XP, levels, streaks and the decay model (constants at the top). |
 | `src/rig.js` | Rig tab content: effects, pairings and starter settings (edit here to add effects). |
+| `src/voiceClips.js` | Recording, storing, trimming and playing note names in your own voice. |
 | `src/mobile.js` | Phone helpers: vibration and the screen wake lock. |
 | `src/audio.js` | Plucked-string synth (Karplus-Strong), no audio files needed. |
 | `src/components/` | `Fretboard` (SVG, vertical on phones, horizontal on wide screens), `ChordDiagram`, `Triads`, `ShortcutCard`, `Drills` and `Metronome`. |

@@ -3,6 +3,8 @@ import Fretboard from './Fretboard.jsx'
 import { SHARP, fretsFor, noteLabel } from '../theory.js'
 import { audioTime, englishVoices, scheduleClick, speak, stopSpeaking } from '../audio.js'
 import { useHeadphonesAwake, useWakeLock } from '../mobile.js'
+import { loadClips, playClip } from '../voiceClips.js'
+import VoiceRecorder from './VoiceRecorder.jsx'
 
 export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 export const FLASH_COUNTS = [3, 5, 8, 12] // notes per run; 12 = every note once
@@ -87,6 +89,13 @@ export default function FretFlash({ progress, updateSettings }) {
   const speakOn = settings.flashSpeak
   const voiceURI = settings.flashVoice ?? ''
   const voices = useVoices()
+  const [clips, setClips] = useState(() => new Map()) // note names recorded in your own voice
+
+  useEffect(() => {
+    let live = true
+    loadClips().then((m) => live && m.size && setClips(m))
+    return () => { live = false }
+  }, [])
   const clickOn = settings.flashClick
 
   // A metronome click on every position (accented when a new note starts), and the
@@ -95,7 +104,11 @@ export default function FretFlash({ progress, updateSettings }) {
     const p = list[i]
     const newNote = i === 0 || list[i - 1].n !== p.n
     if (clickOn) scheduleClick(audioTime() + 0.01, newNote)
-    if (speakOn && newNote) speak(SPOKEN[p.pc], voiceURI)
+    if (speakOn && newNote) {
+      // your recording goes through the headphones; the phone voice is the fallback
+      if (clips.has(p.pc)) playClip(clips.get(p.pc))
+      else speak(SPOKEN[p.pc], voiceURI)
+    }
   }
 
   function start() {
@@ -204,7 +217,7 @@ export default function FretFlash({ progress, updateSettings }) {
                 onChange={(e) => updateSettings({ flashVoice: e.target.value })}
                 aria-label="Voice"
               >
-                <option value="">Most natural ({voices[0].name})</option>
+                <option value="">Phone voice: most natural ({voices[0].name})</option>
                 {voices.map((v) => (
                   <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}</option>
                 ))}
@@ -212,6 +225,7 @@ export default function FretFlash({ progress, updateSettings }) {
               <button className="btn" onClick={() => speak('C sharp. Ay. G.', voiceURI)}>Test</button>
             </div>
           )}
+          {speakOn && <VoiceRecorder clips={clips} setClips={setClips} />}
           <label className="check">
             <input type="checkbox" checked={clickOn} onChange={(e) => updateSettings({ flashClick: e.target.checked })} />
             Metronome click on each step
