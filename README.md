@@ -3,9 +3,11 @@
 A personal, mobile-first guitar theory app: learn the fretboard, chords and scales.
 Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge.
 
-- **Trainer** – *Name the note* and *Find the note* quizzes. Every fretboard position is a
-  card with a level (Learning → Refined → Mastered). Weak, forgotten and unseen positions
-  come up more often, and positions you leave alone slowly decay.
+- **Trainer** – *Name the note*: a quiz where every fretboard position is a card with a level
+  (Learning → Refined → Mastered). Weak, forgotten and unseen positions come up more often, and
+  positions you leave alone slowly decay. *Find the note*: hands-free flashcards. A point lights up
+  on the neck with a sentence saying where it is ("5th string, 7th fret"), then moves on when the
+  countdown ends (0.5–2.5 s, in 0.5 s steps) for 10, 20, 30 or 50 notes.
 - **Chords** – 14 chord types in all 12 keys, each with a one-line description and several
   playable voicings from the nut up the neck. Tap a diagram to hear it strummed. Optionally
   show every chord tone on the whole neck. A **Triads** mode shows major, minor, diminished

@@ -289,3 +289,22 @@ p { margin: 0; }
 .knob-label { font-size: 0.72rem; color: var(--muted); text-align: center; }
 .knob.readout { justify-content: flex-end; min-height: 76px; }
 .readout-val { font-weight: 800; color: var(--accent); white-space: nowrap; margin-bottom: 4px; }
+
+/* ---- find the note: hands-free flashcards */
+.flash { display: flex; flex-direction: column; gap: 10px; }
+.flash-head {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  display: flex; flex-direction: column; gap: 6px; padding: 6px 0;
+}
+.flash-where { font-size: 1.35rem; font-weight: 800; text-align: center; color: var(--accent); min-height: 1.45em; }
+.flash-meta { text-align: center; }
+.flash-intro { text-align: center; }
+.flash-setup { display: flex; flex-direction: column; gap: 10px; }
+.flash-count span { width: 0; animation: flash-fill linear forwards; background: var(--accent); transition: none; }
+@keyframes flash-fill { to { width: 100%; } }
+.flash-board { display: flex; flex-direction: column; }
+.flash-board .mark-from circle { stroke-width: 3; }
+/* fit the whole neck on a phone screen so the point is never scrolled away */
+@media (max-width: 819px) {
+  .flash-board .fretboard.vertical { max-width: none; width: 100%; height: max(320px, calc(100dvh - 330px)); }
+}
