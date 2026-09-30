@@ -69,6 +69,10 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 
 Audio and the future tuner need `https://`, which those hosts provide.
 
+On iPhone the app's sound plays like music (iOS 16.4+), so the silent switch doesn't mute it and
+it follows AirPods or a Waza-Air. While a Find-the-note run or the metronome is going, an
+inaudible tone keeps Bluetooth headphones from sleeping and clipping the clicks.
+
 ## Ideas for next
 
 - Licks section (short phrases with tab, playback and looping)

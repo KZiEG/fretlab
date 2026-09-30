@@ -1,5 +1,6 @@
 // Small phone-only niceties: haptics and keeping the screen awake while practising.
 import { useEffect } from 'react'
+import { keepHeadphonesAwake } from './audio.js'
 
 // Short buzz on supporting phones (Android; iOS Safari ignores it)
 export function buzz(pattern) {
@@ -39,5 +40,14 @@ export function useWakeLock(active) {
       document.removeEventListener('visibilitychange', onVisible)
       lock?.release().catch(() => {})
     }
+  }, [active])
+}
+
+/** While `active`, keep Bluetooth headphones from sleeping between sounds. */
+export function useHeadphonesAwake(active) {
+  useEffect(() => {
+    if (!active) return
+    keepHeadphonesAwake(true)
+    return () => keepHeadphonesAwake(false)
   }, [active])
 }

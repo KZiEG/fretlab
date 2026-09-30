@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import Fretboard from './Fretboard.jsx'
 import { SHARP, fretsFor, noteLabel } from '../theory.js'
 import { audioTime, englishVoices, scheduleClick, speak, stopSpeaking } from '../audio.js'
-import { useWakeLock } from '../mobile.js'
+import { useHeadphonesAwake, useWakeLock } from '../mobile.js'
 
 export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 export const FLASH_COUNTS = [3, 5, 8, 12] // notes per run; 12 = every note once
@@ -80,6 +80,7 @@ export default function FretFlash({ progress, updateSettings }) {
   const [idx, setIdx] = useState(0)
 
   useWakeLock(phase === 'run')
+  useHeadphonesAwake(phase === 'run')
 
   const step = steps[idx]
 

@@ -7,12 +7,46 @@ const cache = new Map()
 // Must be called from a tap/click handler the first time (iOS requirement)
 export function unlockAudio() {
   if (!ctx) {
+    // iOS 16.4+: treat our sound like music, not a notification, so the silent switch
+    // doesn't mute it and it follows AirPods and other Bluetooth headphones
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback'
+    } catch {
+      // older iOS / other browsers: nothing to set
+    }
     const AC = window.AudioContext || window.webkitAudioContext
     if (!AC) return null
     ctx = new AC()
   }
-  if (ctx.state === 'suspended') ctx.resume()
+  // iOS parks the context as 'interrupted' (not just 'suspended') when headphones
+  // connect or disconnect, or after a call; resume from either
+  if (ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume().catch(() => {})
   return ctx
+}
+
+// Bluetooth headphones (AirPods, Waza-Air) power down between sounds and clip the
+// start of the next one, which swallows short metronome clicks entirely. A far
+// below-hearing tone while something is running keeps the link awake.
+let keepAwakeNode = null
+let keepAwakeUsers = 0
+
+export function keepHeadphonesAwake(on) {
+  keepAwakeUsers = Math.max(0, keepAwakeUsers + (on ? 1 : -1))
+  const c = unlockAudio()
+  if (!c) return
+  if (keepAwakeUsers > 0 && !keepAwakeNode) {
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.frequency.value = 40
+    gain.gain.value = 0.0008 // inaudible, but not digital silence (which headphones detect)
+    osc.connect(gain).connect(c.destination)
+    osc.start()
+    keepAwakeNode = osc
+  } else if (keepAwakeUsers === 0 && keepAwakeNode) {
+    keepAwakeNode.stop()
+    keepAwakeNode.disconnect()
+    keepAwakeNode = null
+  }
 }
 
 function pluckBuffer(midi) {
