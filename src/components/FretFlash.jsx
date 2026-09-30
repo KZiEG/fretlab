@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Fretboard from './Fretboard.jsx'
-import { midiAt } from '../theory.js'
-import { pickCard } from '../progress.js'
+import { SHARP, fretsFor, midiAt, noteLabel } from '../theory.js'
 import { pluck } from '../audio.js'
 import { useWakeLock } from '../mobile.js'
 
 export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5]
-export const FLASH_COUNTS = [10, 20, 30, 50]
+export const FLASH_COUNTS = [3, 5, 8, 12] // notes per run; 12 = every note once
 
 const ordinal = (n) => {
   const tens = n % 100
@@ -17,76 +16,94 @@ const ordinal = (n) => {
 // strings are 0 = low E ... 5 = high e; guitarists number them from the high e
 export const whereText = (s, f) => `${ordinal(6 - s)} string, ${f === 0 ? 'open' : `${ordinal(f)} fret`}`
 
+function shuffle(list) {
+  const a = [...list]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+// `count` different notes, each shown on every chosen string from the 6th to the 1st
+// at its lowest fret in range. Strings where the note isn't in range are skipped.
+function buildSteps(count, strings, maxFret) {
+  const order = [...strings].sort((a, b) => a - b)
+  const notes = shuffle(SHARP.map((_, pc) => pc)).slice(0, count)
+  const steps = []
+  notes.forEach((pc, n) => {
+    for (const s of order) {
+      const f = fretsFor(s, pc, maxFret)[0]
+      if (f !== undefined) steps.push({ pc, s, f, n })
+    }
+  })
+  return steps
+}
+
 /**
- * Hands-free flashcards: every `seconds` a new fretboard position lights up with a
- * sentence saying where it is, `count` times in a row. Nothing to tap.
+ * Hands-free flashcards: a note is shown on each string in turn, every `seconds`,
+ * with a sentence saying where it is. Then the next note. Nothing to tap.
  */
 export default function FretFlash({ progress, updateSettings }) {
   const { settings } = progress
   const seconds = settings.flashSeconds
-  const count = settings.flashCount
+  // older saved settings may hold a count from the previous version
+  const count = FLASH_COUNTS.includes(settings.flashCount) ? settings.flashCount : 5
 
   const [phase, setPhase] = useState('setup') // setup | run | done
-  const [card, setCard] = useState(null)
-  const [shown, setShown] = useState(0)
-
-  const lastKey = useRef(null)
-  const progressRef = useRef(progress)
-  progressRef.current = progress
+  const [steps, setSteps] = useState([])
+  const [idx, setIdx] = useState(0)
 
   useWakeLock(phase === 'run')
 
-  function nextCard() {
-    const { strings, maxFret } = progressRef.current.settings
-    const c = pickCard(progressRef.current, strings, maxFret, lastKey.current)
-    lastKey.current = c ? `${c.s}-${c.f}` : null
-    setCard(c)
-    if (c && progressRef.current.settings.sound) pluck(midiAt(c.s, c.f))
-  }
+  const step = steps[idx]
+
+  // play each position as it appears
+  useEffect(() => {
+    if (phase === 'run' && step && settings.sound) pluck(midiAt(step.s, step.f))
+  }, [phase, step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function start() {
     window.scrollTo(0, 0)
-    lastKey.current = null
-    setShown(1)
-    nextCard()
+    setSteps(buildSteps(count, settings.strings, settings.maxFret))
+    setIdx(0)
     setPhase('run')
   }
 
-  // one timeout per card: show it for `seconds`, then move on or finish
+  // one timeout per position: show it for `seconds`, then move on or finish
   useEffect(() => {
     if (phase !== 'run') return
     const id = setTimeout(() => {
-      if (shown >= count) {
-        setPhase('done')
-        return
-      }
-      setShown((n) => n + 1)
-      nextCard()
+      if (idx + 1 >= steps.length) setPhase('done')
+      else setIdx(idx + 1)
     }, seconds * 1000)
     return () => clearTimeout(id)
-  }, [phase, shown, seconds, count]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [phase, idx, steps, seconds])
 
   const running = phase === 'run'
 
   return (
     <div className="flash">
       <div className="flash-head">
-        {running && card ? (
-          <p className="flash-where">{whereText(card.s, card.f)}</p>
+        {running && step ? (
+          <p className="flash-where">
+            <span className="flash-note">{noteLabel(step.pc)}</span>{' '}
+            {whereText(step.s, step.f)}
+          </p>
         ) : (
           <p className="muted flash-intro">
             {phase === 'done'
               ? `Done: ${count} notes.`
-              : 'A point lights up on the neck with where it is, then moves to a new note when the countdown ends. Find each one on your guitar.'}
+              : 'One note at a time, shown on each string from the 6th to the 1st. When the countdown ends it moves to the next string. Play each one on your guitar.'}
           </p>
         )}
         {running && (
           <>
             <div className="progress-bar flash-count">
-              {/* key restarts the fill animation for every card */}
-              <span key={shown} style={{ animationDuration: `${seconds}s` }} />
+              {/* key restarts the fill animation for every position */}
+              <span key={idx} style={{ animationDuration: `${seconds}s` }} />
             </div>
-            <p className="muted small flash-meta">Note {shown} of {count} · {seconds}s each</p>
+            <p className="muted small flash-meta">Note {step.n + 1} of {count} · {seconds}s each</p>
           </>
         )}
       </div>
@@ -116,8 +133,12 @@ export default function FretFlash({ progress, updateSettings }) {
       <div className="flash-board">
         <Fretboard
           frets={settings.maxFret}
-          marks={running && card ? [{ s: card.s, f: card.f, kind: 'from' }] : []}
-          highlightString={running && card ? card.s : null}
+          marks={running && step ? [
+            // where this note already showed up on the strings before, so the pattern builds up
+            ...steps.slice(0, idx).filter((p) => p.n === step.n).map((p) => ({ s: p.s, f: p.f, kind: 'note', label: SHARP[p.pc] })),
+            { s: step.s, f: step.f, kind: 'from', label: SHARP[step.pc] },
+          ] : []}
+          highlightString={running && step ? step.s : null}
         />
       </div>
 

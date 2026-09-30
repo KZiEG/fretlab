@@ -21,7 +21,7 @@ export const cellKey = (string, fret) => `${string}-${fret}`
 export const defaultSettings = {
   mode: 'name', // 'name' | 'find'
   flashSeconds: 1.5, // Find the note: seconds each position is shown
-  flashCount: 20, // Find the note: positions per run
+  flashCount: 5, // Find the note: notes per run, each shown on every string
   strings: [0, 1, 2, 3, 4, 5],
   maxFret: 12,
   sound: true,

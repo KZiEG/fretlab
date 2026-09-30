@@ -297,6 +297,7 @@ p { margin: 0; }
   display: flex; flex-direction: column; gap: 6px; padding: 6px 0;
 }
 .flash-where { font-size: 1.35rem; font-weight: 800; text-align: center; color: var(--accent); min-height: 1.45em; }
+.flash-note { color: var(--text); margin-right: 10px; }
 .flash-meta { text-align: center; }
 .flash-intro { text-align: center; }
 .flash-setup { display: flex; flex-direction: column; gap: 10px; }
