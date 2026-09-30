@@ -7,7 +7,8 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   (Learning → Refined → Mastered). Weak, forgotten and unseen positions come up more often, and
   positions you leave alone slowly decay. *Find the note*: hands-free flashcards. One note at a time is shown on each
   string in turn, 6th to 1st, with its name on the neck and a sentence like "A: 5th string, open". It
-  moves on when the countdown ends (0.5–2.5 s, in 0.5 s steps), for 3, 5, 8 or all 12 notes.
+  moves on when the countdown ends (0.5–2.5 s, in 0.5 s steps), for notes you pick (in the order you
+  pick them) or 3, 5, 8 or all 12 random notes.
 - **Chords** – 14 chord types in all 12 keys, each with a one-line description and several
   playable voicings from the nut up the neck. Tap a diagram to hear it strummed. Optionally
   show every chord tone on the whole neck. A **Triads** mode shows major, minor, diminished

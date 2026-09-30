@@ -25,11 +25,12 @@ function shuffle(list) {
   return a
 }
 
-// `count` different notes, each shown on every chosen string from the 6th to the 1st
+// Each note shown on every chosen string from the 6th to the 1st
 // at its lowest fret in range. Strings where the note isn't in range are skipped.
-function buildSteps(count, strings, maxFret) {
+// `notes` is the player's picks, in the order picked; empty means random ones
+function buildSteps(notes, count, strings, maxFret) {
   const order = [...strings].sort((a, b) => a - b)
-  const notes = shuffle(SHARP.map((_, pc) => pc)).slice(0, count)
+  if (!notes.length) notes = shuffle(SHARP.map((_, pc) => pc)).slice(0, count)
   const steps = []
   notes.forEach((pc, n) => {
     for (const s of order) {
@@ -49,6 +50,12 @@ export default function FretFlash({ progress, updateSettings }) {
   const seconds = settings.flashSeconds
   // older saved settings may hold a count from the previous version
   const count = FLASH_COUNTS.includes(settings.flashCount) ? settings.flashCount : 5
+  const picked = settings.flashNotes ?? []
+  const total = picked.length || count
+
+  function togglePick(pc) {
+    updateSettings({ flashNotes: picked.includes(pc) ? picked.filter((x) => x !== pc) : [...picked, pc] })
+  }
 
   const [phase, setPhase] = useState('setup') // setup | run | done
   const [steps, setSteps] = useState([])
@@ -65,7 +72,7 @@ export default function FretFlash({ progress, updateSettings }) {
 
   function start() {
     window.scrollTo(0, 0)
-    setSteps(buildSteps(count, settings.strings, settings.maxFret))
+    setSteps(buildSteps(picked, count, settings.strings, settings.maxFret))
     setIdx(0)
     setPhase('run')
   }
@@ -93,7 +100,7 @@ export default function FretFlash({ progress, updateSettings }) {
         ) : (
           <p className="muted flash-intro">
             {phase === 'done'
-              ? `Done: ${count} notes.`
+              ? `Done: ${total} note${total === 1 ? '' : 's'}.`
               : 'One note at a time, shown on each string from the 6th to the 1st. When the countdown ends it moves to the next string. Play each one on your guitar.'}
           </p>
         )}
@@ -103,7 +110,7 @@ export default function FretFlash({ progress, updateSettings }) {
               {/* key restarts the fill animation for every position */}
               <span key={idx} style={{ animationDuration: `${seconds}s` }} />
             </div>
-            <p className="muted small flash-meta">Note {step.n + 1} of {count} · {seconds}s each</p>
+            <p className="muted small flash-meta">Note {step.n + 1} of {total} · {seconds}s each</p>
           </>
         )}
       </div>
@@ -118,14 +125,31 @@ export default function FretFlash({ progress, updateSettings }) {
               </button>
             ))}
           </div>
-          <h4>How many notes</h4>
+          <h4>Notes</h4>
           <div className="chips">
-            {FLASH_COUNTS.map((n) => (
-              <button key={n} className={`chip${count === n ? ' on' : ''}`} onClick={() => updateSettings({ flashCount: n })}>
-                {n}
+            <button className={`chip${picked.length ? '' : ' on'}`} onClick={() => updateSettings({ flashNotes: [] })}>
+              Random
+            </button>
+            {SHARP.map((name, pc) => (
+              <button key={pc} className={`chip${picked.includes(pc) ? ' on' : ''}`} onClick={() => togglePick(pc)}>
+                {name}
               </button>
             ))}
           </div>
+          {picked.length > 0 ? (
+            <p className="muted small">Runs {picked.map((pc) => SHARP[pc]).join(', ')} in the order you picked them.</p>
+          ) : (
+            <>
+              <h4>How many random notes</h4>
+              <div className="chips">
+                {FLASH_COUNTS.map((n) => (
+                  <button key={n} className={`chip${count === n ? ' on' : ''}`} onClick={() => updateSettings({ flashCount: n })}>
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <button className="btn primary wide" onClick={start}>{phase === 'done' ? 'Go again' : 'Start'}</button>
         </div>
       )}
