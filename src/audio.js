@@ -78,14 +78,49 @@ export function audioTime() {
   return unlockAudio()?.currentTime ?? 0
 }
 
-// Say something with the device's built-in voice (Web Speech API). The first call
-// must come from a tap on iOS, after which it also works from timers.
-export function speak(text) {
+// ---- speech: the device's built-in voices (Web Speech API)
+
+// Joke and character voices some phones ship with; never pick these automatically
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley/i
+
+// Higher = more natural sounding. Premium/Enhanced (iOS, macOS) and Natural/Neural/
+// Google (Android, Chrome, Edge) voices are far less robotic than the defaults.
+function voiceScore(v) {
+  let score = 0
+  if (/^en[-_]?us/i.test(v.lang)) score += 3
+  else if (/^en/i.test(v.lang)) score += 2
+  else return -100
+  if (/premium/i.test(v.name)) score += 6
+  if (/enhanced/i.test(v.name)) score += 5
+  if (/natural|neural/i.test(v.name)) score += 5
+  if (/google/i.test(v.name)) score += 3
+  if (/samantha|ava|allison|susan|zoe|evan|nathan|tom|serena|daniel|karen|moira/i.test(v.name)) score += 1
+  if (!v.localService) score += 1 // online voices are usually the better ones
+  if (NOVELTY.test(v.name)) score -= 50
+  return score
+}
+
+/** English voices on this device, most natural first. May be empty until they load. */
+export function englishVoices() {
+  const voices = window.speechSynthesis?.getVoices() ?? []
+  return voices
+    .filter((v) => voiceScore(v) > -10)
+    .sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name))
+}
+
+// Say something. `voiceURI` picks a voice; empty means the most natural one found.
+// The first call must come from a tap on iOS, after which it also works from timers.
+export function speak(text, voiceURI = '') {
   const synth = window.speechSynthesis
   if (!synth) return
   synth.cancel() // never let a backlog build up at fast countdowns
   const u = new SpeechSynthesisUtterance(text)
-  u.rate = 1.1
+  const voices = englishVoices()
+  const voice = voices.find((v) => v.voiceURI === voiceURI) ?? voices[0]
+  if (voice) {
+    u.voice = voice
+    u.lang = voice.lang
+  }
   synth.speak(u)
 }
 

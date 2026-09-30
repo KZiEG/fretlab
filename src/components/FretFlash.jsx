@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Fretboard from './Fretboard.jsx'
 import { SHARP, fretsFor, noteLabel } from '../theory.js'
-import { audioTime, scheduleClick, speak, stopSpeaking } from '../audio.js'
+import { audioTime, englishVoices, scheduleClick, speak, stopSpeaking } from '../audio.js'
 import { useWakeLock } from '../mobile.js'
 
 export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
@@ -19,6 +19,20 @@ export const whereText = (s, f) => `${ordinal(6 - s)} string, ${f === 0 ? 'open'
 // How the voice should say each note: letters alone can be read as words ("a"),
 // so spell them the way they sound
 const SPOKEN = ['C', 'C sharp', 'D', 'D sharp', 'E', 'F', 'F sharp', 'G', 'G sharp', 'Ay', 'A sharp', 'B']
+
+// Voices load asynchronously (Chrome fills the list after a 'voiceschanged' event)
+function useVoices() {
+  const [voices, setVoices] = useState(englishVoices)
+  useEffect(() => {
+    const synth = window.speechSynthesis
+    if (!synth) return
+    const on = () => setVoices(englishVoices())
+    synth.addEventListener?.('voiceschanged', on)
+    on()
+    return () => synth.removeEventListener?.('voiceschanged', on)
+  }, [])
+  return voices
+}
 
 function shuffle(list) {
   const a = [...list]
@@ -70,6 +84,8 @@ export default function FretFlash({ progress, updateSettings }) {
   const step = steps[idx]
 
   const speakOn = settings.flashSpeak
+  const voiceURI = settings.flashVoice ?? ''
+  const voices = useVoices()
   const clickOn = settings.flashClick
 
   // A metronome click on every position (accented when a new note starts), and the
@@ -78,7 +94,7 @@ export default function FretFlash({ progress, updateSettings }) {
     const p = list[i]
     const newNote = i === 0 || list[i - 1].n !== p.n
     if (clickOn) scheduleClick(audioTime() + 0.01, newNote)
-    if (speakOn && newNote) speak(SPOKEN[p.pc])
+    if (speakOn && newNote) speak(SPOKEN[p.pc], voiceURI)
   }
 
   function start() {
@@ -179,6 +195,22 @@ export default function FretFlash({ progress, updateSettings }) {
             <input type="checkbox" checked={speakOn} onChange={(e) => updateSettings({ flashSpeak: e.target.checked })} />
             Say each note out loud
           </label>
+          {speakOn && voices.length > 0 && (
+            <div className="voice-row">
+              <select
+                className="voice-select"
+                value={voices.some((v) => v.voiceURI === voiceURI) ? voiceURI : ''}
+                onChange={(e) => updateSettings({ flashVoice: e.target.value })}
+                aria-label="Voice"
+              >
+                <option value="">Most natural ({voices[0].name})</option>
+                {voices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}</option>
+                ))}
+              </select>
+              <button className="btn" onClick={() => speak('C sharp. Ay. G.', voiceURI)}>Test</button>
+            </div>
+          )}
           <label className="check">
             <input type="checkbox" checked={clickOn} onChange={(e) => updateSettings({ flashClick: e.target.checked })} />
             Metronome click on each step
