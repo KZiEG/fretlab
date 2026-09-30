@@ -77,3 +77,18 @@ export function scheduleClick(time, accent = false) {
 export function audioTime() {
   return unlockAudio()?.currentTime ?? 0
 }
+
+// Say something with the device's built-in voice (Web Speech API). The first call
+// must come from a tap on iOS, after which it also works from timers.
+export function speak(text) {
+  const synth = window.speechSynthesis
+  if (!synth) return
+  synth.cancel() // never let a backlog build up at fast countdowns
+  const u = new SpeechSynthesisUtterance(text)
+  u.rate = 1.1
+  synth.speak(u)
+}
+
+export function stopSpeaking() {
+  window.speechSynthesis?.cancel()
+}
