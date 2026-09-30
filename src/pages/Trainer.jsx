@@ -173,7 +173,7 @@ export default function Trainer({ progress, answer, updateSettings }) {
         <h4>Options</h4>
         <label className="check">
           <input type="checkbox" checked={settings.sound} onChange={(e) => updateSettings({ sound: e.target.checked })} />
-          Play each note
+          Play the note after each answer
         </label>
         <label className="check">
           <input type="checkbox" checked={settings.decay} onChange={(e) => updateSettings({ decay: e.target.checked })} />

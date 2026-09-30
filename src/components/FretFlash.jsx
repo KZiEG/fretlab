@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Fretboard from './Fretboard.jsx'
-import { SHARP, fretsFor, midiAt, noteLabel } from '../theory.js'
-import { pluck } from '../audio.js'
+import { SHARP, fretsFor, noteLabel } from '../theory.js'
+import { audioTime, scheduleClick, speak, stopSpeaking } from '../audio.js'
 import { useWakeLock } from '../mobile.js'
 
 export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
@@ -15,6 +15,10 @@ const ordinal = (n) => {
 
 // strings are 0 = low E ... 5 = high e; guitarists number them from the high e
 export const whereText = (s, f) => `${ordinal(6 - s)} string, ${f === 0 ? 'open' : `${ordinal(f)} fret`}`
+
+// How the voice should say each note: letters alone can be read as words ("a"),
+// so spell them the way they sound
+const SPOKEN = ['C', 'C sharp', 'D', 'D sharp', 'E', 'F', 'F sharp', 'G', 'G sharp', 'Ay', 'A sharp', 'B']
 
 function shuffle(list) {
   const a = [...list]
@@ -65,27 +69,47 @@ export default function FretFlash({ progress, updateSettings }) {
 
   const step = steps[idx]
 
-  // play each position as it appears
-  useEffect(() => {
-    if (phase === 'run' && step && settings.sound) pluck(midiAt(step.s, step.f))
-  }, [phase, step]) // eslint-disable-line react-hooks/exhaustive-deps
+  const speakOn = settings.flashSpeak
+  const clickOn = settings.flashClick
+
+  // A metronome click on every position (accented when a new note starts), and the
+  // note's name said out loud when it changes.
+  function announce(list, i) {
+    const p = list[i]
+    const newNote = i === 0 || list[i - 1].n !== p.n
+    if (clickOn) scheduleClick(audioTime() + 0.01, newNote)
+    if (speakOn && newNote) speak(SPOKEN[p.pc])
+  }
 
   function start() {
     window.scrollTo(0, 0)
-    setSteps(buildSteps(picked, count, settings.strings, settings.maxFret))
+    const list = buildSteps(picked, count, settings.strings, settings.maxFret)
+    setSteps(list)
     setIdx(0)
     setPhase('run')
+    if (list.length) announce(list, 0) // inside the tap, which unlocks audio and speech on iOS
   }
+
+  function stop() {
+    stopSpeaking()
+    setPhase('setup')
+  }
+
+  useEffect(() => stopSpeaking, [])
 
   // one timeout per position: show it for `seconds`, then move on or finish
   useEffect(() => {
     if (phase !== 'run') return
     const id = setTimeout(() => {
-      if (idx + 1 >= steps.length) setPhase('done')
-      else setIdx(idx + 1)
+      if (idx + 1 >= steps.length) {
+        setPhase('done')
+        return
+      }
+      announce(steps, idx + 1)
+      setIdx(idx + 1)
     }, seconds * 1000)
     return () => clearTimeout(id)
-  }, [phase, idx, steps, seconds])
+  }, [phase, idx, steps, seconds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const running = phase === 'run'
 
@@ -150,6 +174,15 @@ export default function FretFlash({ progress, updateSettings }) {
               </div>
             </>
           )}
+          <h4>Sound</h4>
+          <label className="check">
+            <input type="checkbox" checked={speakOn} onChange={(e) => updateSettings({ flashSpeak: e.target.checked })} />
+            Say each note out loud
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={clickOn} onChange={(e) => updateSettings({ flashClick: e.target.checked })} />
+            Metronome click on each step
+          </label>
           <button className="btn primary wide" onClick={start}>{phase === 'done' ? 'Go again' : 'Start'}</button>
         </div>
       )}
@@ -166,7 +199,7 @@ export default function FretFlash({ progress, updateSettings }) {
         />
       </div>
 
-      {running && <button className="btn wide" onClick={() => setPhase('setup')}>Stop</button>}
+      {running && <button className="btn wide" onClick={stop}>Stop</button>}
     </div>
   )
 }
