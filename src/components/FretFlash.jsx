@@ -4,7 +4,7 @@ import { SHARP, fretsFor, midiAt, noteLabel } from '../theory.js'
 import { pluck } from '../audio.js'
 import { useWakeLock } from '../mobile.js'
 
-export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5]
+export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 export const FLASH_COUNTS = [3, 5, 8, 12] // notes per run; 12 = every note once
 
 const ordinal = (n) => {
