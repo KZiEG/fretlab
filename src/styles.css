@@ -315,3 +315,15 @@ p { margin: 0; }
   min-width: 0; min-height: 44px; padding: 0 10px; border-radius: 10px; font: inherit; font-size: 0.92rem;
   background: var(--panel); color: var(--text); border: 1px solid var(--line);
 }
+
+/* ---- scale pattern (whole / half steps) */
+.pattern { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 10px; }
+.pattern h4 { margin: 0; }
+.pattern-formula { display: flex; flex-wrap: wrap; gap: 5px; }
+.step { font-weight: 800; font-size: 0.9rem; padding: 2px 7px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.pattern-grid { display: grid; row-gap: 4px; align-items: center; }
+.pattern-note { justify-self: center; font-weight: 700; font-size: 0.92rem; }
+.pattern-note.root { color: var(--root); }
+.pattern-step { justify-self: center; font-size: 0.72rem; font-weight: 800; color: var(--muted); padding: 1px 5px; border-radius: 5px; border: 1px solid var(--line); }
+.step-1 { color: var(--accent); border-color: var(--accent); }
+.step-3 { color: var(--note); border-color: var(--note); }

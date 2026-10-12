@@ -16,7 +16,8 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   playable voicings from the nut up the neck. Tap a diagram to hear it strummed. Optionally
   show every chord tone on the whole neck. A **Triads** mode shows major, minor, diminished
   and augmented triads on each set of three neighbouring strings, in all three inversions.
-- **Scales** – 11 scales in all 12 keys, shown across the whole neck or one position "box"
+- **Scales** – 11 scales in all 12 keys, with the scale pattern (whole and half steps, e.g. W W H W W W H)
+  under the name, shown across the whole neck or one position "box"
   at a time (other notes are dimmed for context). Note names or scale degrees. Playable.
 - **Fretboard** – *Octave shortcuts*: four patterns for finding the same note an octave (or two)
   higher, each with the rule, why it works, and an interactive fretboard with an arrow you can
