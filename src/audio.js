@@ -95,16 +95,19 @@ export function playSequence(midis, gap = 0.28) {
 export function scheduleClick(time, accent = false) {
   const c = unlockAudio()
   if (!c) return
+  // never start in the past: a late click would have its whole envelope already
+  // over by the time the audio thread gets to it, and come out silent
+  const t = Math.max(time, c.currentTime + 0.005)
   const osc = c.createOscillator()
   const gain = c.createGain()
   osc.type = 'square'
   osc.frequency.value = accent ? 1500 : 950
-  gain.gain.setValueAtTime(0.0001, time)
-  gain.gain.exponentialRampToValueAtTime(accent ? 0.3 : 0.18, time + 0.002)
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.045)
+  gain.gain.setValueAtTime(0, t)
+  gain.gain.linearRampToValueAtTime(accent ? 0.3 : 0.18, t + 0.002)
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05)
   osc.connect(gain).connect(c.destination)
-  osc.start(time)
-  osc.stop(time + 0.05)
+  osc.start(t)
+  osc.stop(t + 0.06)
 }
 
 // The AudioContext's own clock, for scheduling the metronome precisely
