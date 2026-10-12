@@ -76,6 +76,10 @@ export default function App() {
     (key, ms, mistakes) => setProgress((p) => applyDrill(p, key, ms, mistakes)),
     [],
   )
+  const setPatches = useCallback(
+    (fn) => setProgress((p) => ({ ...p, patches: typeof fn === 'function' ? fn(p.patches ?? []) : fn })),
+    [],
+  )
   const updateSettings = useCallback(
     (patch) => setProgress((p) => ({ ...p, settings: { ...p.settings, ...patch } })),
     [],
@@ -93,7 +97,9 @@ export default function App() {
         {route === 'chords' && <Chords />}
         {route === 'scales' && <Scales />}
         {route === 'fretboard' && <Internalize progress={progress} answer={answer} recordDrill={recordDrill} />}
-        {route === 'rig' && <Rig />}
+        {route === 'rig' && (
+          <Rig progress={progress} updateSettings={updateSettings} setPatches={setPatches} />
+        )}
       </main>
 
       <nav className="tabbar">

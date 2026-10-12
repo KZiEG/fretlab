@@ -27,7 +27,10 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   what you are looking for, times you, counts mistakes (+3 s each when comparing runs) and keeps
   personal bests. Notes you hit first try also feed your Trainer levels. A metronome (start/stop,
   40-220 BPM) sits above the drills, independent of the timer.
-- **Rig** – effects on the BOSS Waza-Air, starting with **Delay** and **Reverb**: what each does,
+- **Rig** – switch between the BOSS **Waza-Air** and **ME-80**. ME-80: an effects guide section by
+  section in signal-chain order (each type with its explanation and what knobs 1, 2, 3… do), and
+  *My sounds*, patch cards that save your knob positions as clock positions (kept with your progress
+  and included in Export), plus starter sounds. Waza-Air: effects, starting with **Delay** and **Reverb**: what each does,
   where it sits in the signal chain, its controls and types, and pairings with other effects, each
   with starter settings drawn as knobs. Delay has a tempo-to-milliseconds calculator.
 - **Home** – level, XP, day streak, a colour-coded note map, and the notes needing attention.
@@ -54,6 +57,7 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 | `tools/make_icons.py` | Python: draws the PWA icons in `public/`. |
 | `src/theory.js` | Notes, tuning, helpers. |
 | `src/progress.js` | XP, levels, streaks and the decay model (constants at the top). |
+| `src/me80.js` | ME-80 guide content (own words, from the owner's manual) and starter sounds. |
 | `src/rig.js` | Rig tab content: effects, pairings and starter settings (edit here to add effects). |
 | `src/mobile.js` | Phone helpers: vibration and the screen wake lock. |
 | `src/audio.js` | Plucked-string synth (Karplus-Strong), no audio files needed. |

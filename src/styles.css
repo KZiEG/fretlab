@@ -327,3 +327,40 @@ p { margin: 0; }
 .pattern-step { justify-self: center; font-size: 0.72rem; font-weight: 800; color: var(--muted); padding: 1px 5px; border-radius: 5px; border: 1px solid var(--line); }
 .step-1 { color: var(--accent); border-color: var(--accent); }
 .step-3 { color: var(--note); border-color: var(--note); }
+
+/* ---- ME-80 guide and patch cards */
+.me-guide { display: flex; flex-direction: column; gap: 10px; }
+.me-guide h3 { margin: 4px 0 0; }
+.me-types { display: flex; flex-direction: column; gap: 8px; }
+.me-type { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.me-type-head { display: flex; align-items: center; gap: 8px; }
+.me-type-num { min-width: 24px; height: 24px; border-radius: 50%; background: var(--panel-2); display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; color: var(--accent); }
+.me-type-what { font-size: 0.93rem; }
+.me-knobs { display: grid; gap: 6px; }
+.me-knob { background: var(--panel-2); border-radius: 8px; padding: 6px 8px; display: flex; flex-direction: column; min-width: 0; }
+.me-knob strong { font-size: 0.85rem; overflow-wrap: anywhere; }
+.me-knob .small { font-size: 0.75rem; line-height: 1.3; }
+.me-knob.unused { opacity: 0.55; }
+.me-knob-num { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+@media (max-width: 400px) { .me-knobs[style*="repeat(4"], .me-knobs[style*="repeat(5"] { grid-template-columns: repeat(2, 1fr) !important; } }
+.patch-list { display: flex; flex-direction: column; gap: 10px; }
+.patch-list h3 { margin: 8px 0 0; }
+.patch-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.patch-card h3 { margin: 0; }
+.patch-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.patch-card .chips .chip { min-height: 34px; padding: 5px 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+.field input, .field select {
+  min-height: 44px; padding: 0 10px; border-radius: 10px; font: inherit;
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+}
+.edit-sec { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; }
+.edit-sec.on { border-color: var(--accent); }
+.edit-sec-head { margin-top: 0; }
+.edit-knobs { display: flex; flex-direction: column; gap: 8px; }
+.edit-knob { display: grid; grid-template-columns: 40px 104px 1fr; align-items: center; gap: 8px; }
+.edit-knob-text { display: flex; flex-direction: column; line-height: 1.2; }
+.edit-knob input[type=range] { width: 100%; accent-color: var(--accent); height: 32px; }
+.dial { flex: 0 0 auto; }
+.patch-card .knob { width: 76px; }
+.patch-card .knob-val { white-space: nowrap; font-size: 0.78rem; }
