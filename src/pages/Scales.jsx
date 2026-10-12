@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import scaleData from '../data/scales.json'
 import Fretboard from '../components/Fretboard.jsx'
-import { MAX_FRET, OPEN_MIDI, noteLabel, pcAt, spell } from '../theory.js'
+import { MAX_FRET, OPEN_MIDI, noteLabel, pcAt, spellDegrees } from '../theory.js'
 import { playSequence, unlockAudio } from '../audio.js'
 
 // Size of each step between scale notes, in semitones (= frets on one string)
@@ -52,6 +52,7 @@ export default function Scales() {
   const scale = scaleData.scales.find((s) => s.id === scaleId)
   const windows = scaleData.windows[root][scaleId]
   const pcs = scale.intervals.map((i) => (root + i) % 12)
+  const names = spellDegrees(root, scale.intervals, scale.degrees) // names[i] spells pcs[i]
   const activeWindow = pos === 'all' ? null : windows[pos] ?? null
 
   const marks = useMemo(() => {
@@ -64,7 +65,7 @@ export default function Scales() {
         out.push({
           s, f,
           kind: !inside ? 'ghost' : idx === 0 ? 'root' : 'note',
-          label: !inside ? null : labels === 'note' ? spell(pcs[idx], root) : scale.degrees[idx],
+          label: !inside ? null : labels === 'note' ? names[idx] : scale.degrees[idx],
         })
       }
     }
@@ -102,15 +103,15 @@ export default function Scales() {
 
       <div className="chord-head">
         <div>
-          <div className="chord-title">{spell(root, root)} {scale.name}</div>
+          <div className="chord-title">{names[0]} {scale.name}</div>
           <div className="muted">
-            {pcs.map((pc) => spell(pc, root)).join(' · ')} &nbsp;({scale.degrees.join(' ')})
+            {names.join(' · ')} &nbsp;({scale.degrees.join(' ')})
           </div>
         </div>
         <button className="btn" onClick={play}>Play</button>
       </div>
 
-      <ScalePattern notes={[...pcs, root].map((pc) => spell(pc, root))} intervals={scale.intervals} />
+      <ScalePattern notes={[...names, names[0]]} intervals={scale.intervals} />
 
       <h4>Position</h4>
       <div className="chips scroll">

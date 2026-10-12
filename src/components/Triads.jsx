@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import triadData from '../data/triads.json'
 import ChordDiagram from './ChordDiagram.jsx'
-import { midiAt, spell } from '../theory.js'
+import { midiAt, spellDegrees } from '../theory.js'
 import { strum, unlockAudio } from '../audio.js'
 
 const INVERSIONS = [
@@ -20,6 +20,7 @@ export default function Triads({ root }) {
   const sset = triadData.stringSets[setIdx]
   const shapes = triadData.voicings[root][qid][setIdx]
   const tones = quality.intervals.map((i) => (root + i) % 12)
+  const names = spellDegrees(root, quality.intervals, quality.degrees) // names[i] spells tones[i]
 
   function play(triple) {
     unlockAudio()
@@ -59,9 +60,9 @@ export default function Triads({ root }) {
 
       <div className="chord-head">
         <div>
-          <div className="chord-title">{spell(root, root)} {quality.name.replace(' triad', '').toLowerCase()}</div>
+          <div className="chord-title">{names[0]} {quality.name.replace(' triad', '').toLowerCase()}</div>
           <div className="muted">
-            {tones.map((pc) => spell(pc, root)).join(' · ')} &nbsp;({quality.degrees.join(' ')})
+            {names.join(' · ')} &nbsp;({quality.degrees.join(' ')})
           </div>
         </div>
       </div>
@@ -69,7 +70,7 @@ export default function Triads({ root }) {
 
       {INVERSIONS.map((inv, i) => (
         <div key={inv.name}>
-          <h4>{inv.name} · {spell(tones[inv.tone], root)} ({inv.bass}) in the bass</h4>
+          <h4>{inv.name} · {names[inv.tone]} ({inv.bass}) in the bass</h4>
           <div className="voicing-grid">
             {shapes[i].map((triple, k) => (
               <div className="voicing" key={k}>

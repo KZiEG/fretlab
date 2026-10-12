@@ -17,12 +17,46 @@ export const midiToFreq = (midi) => 440 * Math.pow(2, (midi - 69) / 12)
 // "C#/Db" for accidentals, plain letter otherwise
 export const noteLabel = (pc) => (SHARP[pc] === FLAT[pc] ? SHARP[pc] : `${SHARP[pc]}/${FLAT[pc]}`)
 
-// Spell a note the way it would appear in a key: flats for F, Bb, Eb, Ab, Db, Gb
+// Black-key roots usually written with flats (Db, Eb, Ab, Bb) — plus F, whose key has one
 const FLAT_KEYS = new Set([1, 3, 5, 8, 10])
-export const spell = (pc, keyRoot) => (FLAT_KEYS.has(keyRoot) ? FLAT[pc] : SHARP[pc])
+
+// ---- spelling by scale/chord degree
+// Each degree gets its own letter (a b5 above E is Bb, never A#), so a scale uses
+// every letter once and a chord reads in thirds (C Eb G, not C D# G).
+const LETTERS = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+const LETTER_PC = [0, 2, 4, 5, 7, 9, 11]
+const ACCIDENTAL = { '-2': 'bb', '-1': 'b', 0: '', 1: '#', 2: '##' }
+
+function spellFrom(rootLetter, rootPc, intervals, degrees) {
+  return intervals.map((iv, i) => {
+    const n = parseInt(degrees[i].replace(/[^0-9]/g, ''), 10) - 1 // '#4' -> 3, 'b9' -> 8
+    const li = (rootLetter + n) % 7
+    const pc = (rootPc + iv) % 12
+    let diff = (pc - LETTER_PC[li] + 12) % 12
+    if (diff > 6) diff -= 12
+    return LETTERS[li] + (ACCIDENTAL[diff] ?? '?')
+  })
+}
+
+const accidentalCost = (names) =>
+  names.reduce((sum, n) => sum + (n.length - 1) + (n.length > 2 ? 10 : 0), 0) // doubles cost most
+
+/**
+ * Note names for a scale or chord on `root`, spelled by degree. For a black-key root it
+ * tries both names (e.g. Db and C#) and keeps the one with fewer sharps/flats, so you
+ * get Eb minor rather than D# minor, and C# Locrian rather than Db with double flats.
+ */
+export function spellDegrees(root, intervals, degrees) {
+  const names = [SHARP[root], FLAT[root]]
+  const options = [...new Set(names)].map((name) => spellFrom(LETTERS.indexOf(name[0]), root, intervals, degrees))
+  if (options.length === 1) return options[0]
+  const [a, b] = options.map(accidentalCost)
+  if (a !== b) return a < b ? options[0] : options[1]
+  return FLAT_KEYS.has(root) ? options[1] : options[0] // tie: the app's usual choice
+}
 
 export function chordName(root, quality) {
-  return `${spell(root, root)}${quality.symbol}`
+  return `${spellDegrees(root, quality.intervals, quality.degrees)[0]}${quality.symbol}`
 }
 
 // Which frets on a string (within 0..maxFret) hold a given pitch class

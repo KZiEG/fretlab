@@ -3,7 +3,7 @@ import chordData from '../data/chords.json'
 import ChordDiagram from '../components/ChordDiagram.jsx'
 import Fretboard from '../components/Fretboard.jsx'
 import Triads from '../components/Triads.jsx'
-import { MAX_FRET, chordName, midiAt, noteLabel, pcAt, spell } from '../theory.js'
+import { MAX_FRET, chordName, midiAt, noteLabel, pcAt, spellDegrees } from '../theory.js'
 import { strum, unlockAudio } from '../audio.js'
 
 function ChordShapes({ root }) {
@@ -48,7 +48,7 @@ function ChordShapes({ root }) {
         <div>
           <div className="chord-title">{chordName(root, quality)}</div>
           <div className="muted">
-            {tones.map((pc) => spell(pc, root)).join(' · ')} &nbsp;({quality.degrees.join(' ')})
+            {spellDegrees(root, quality.intervals, quality.degrees).join(' · ')} &nbsp;({quality.degrees.join(' ')})
           </div>
         </div>
         <button className="btn" onClick={() => play(voicings[0].frets)}>Play</button>
