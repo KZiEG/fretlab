@@ -7,12 +7,46 @@ const cache = new Map()
 // Must be called from a tap/click handler the first time (iOS requirement)
 export function unlockAudio() {
   if (!ctx) {
+    // iOS 16.4+: treat our sound like music, not a notification, so the silent switch
+    // doesn't mute it and it follows AirPods and other Bluetooth headphones
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback'
+    } catch {
+      // older iOS / other browsers: nothing to set
+    }
     const AC = window.AudioContext || window.webkitAudioContext
     if (!AC) return null
     ctx = new AC()
   }
-  if (ctx.state === 'suspended') ctx.resume()
+  // iOS parks the context as 'interrupted' (not just 'suspended') when headphones
+  // connect or disconnect, or after a call; resume from either
+  if (ctx.state !== 'running' && ctx.state !== 'closed') ctx.resume().catch(() => {})
   return ctx
+}
+
+// Bluetooth headphones (AirPods, Waza-Air) power down between sounds and clip the
+// start of the next one, which swallows short metronome clicks entirely. A far
+// below-hearing tone while something is running keeps the link awake.
+let keepAwakeNode = null
+let keepAwakeUsers = 0
+
+export function keepHeadphonesAwake(on) {
+  keepAwakeUsers = Math.max(0, keepAwakeUsers + (on ? 1 : -1))
+  const c = unlockAudio()
+  if (!c) return
+  if (keepAwakeUsers > 0 && !keepAwakeNode) {
+    const osc = c.createOscillator()
+    const gain = c.createGain()
+    osc.frequency.value = 40
+    gain.gain.value = 0.0008 // inaudible, but not digital silence (which headphones detect)
+    osc.connect(gain).connect(c.destination)
+    osc.start()
+    keepAwakeNode = osc
+  } else if (keepAwakeUsers === 0 && keepAwakeNode) {
+    keepAwakeNode.stop()
+    keepAwakeNode.disconnect()
+    keepAwakeNode = null
+  }
 }
 
 function pluckBuffer(midi) {
@@ -61,16 +95,19 @@ export function playSequence(midis, gap = 0.28) {
 export function scheduleClick(time, accent = false) {
   const c = unlockAudio()
   if (!c) return
+  // never start in the past: a late click would have its whole envelope already
+  // over by the time the audio thread gets to it, and come out silent
+  const t = Math.max(time, c.currentTime + 0.005)
   const osc = c.createOscillator()
   const gain = c.createGain()
   osc.type = 'square'
   osc.frequency.value = accent ? 1500 : 950
-  gain.gain.setValueAtTime(0.0001, time)
-  gain.gain.exponentialRampToValueAtTime(accent ? 0.3 : 0.18, time + 0.002)
-  gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.045)
+  gain.gain.setValueAtTime(0, t)
+  gain.gain.linearRampToValueAtTime(accent ? 0.3 : 0.18, t + 0.002)
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05)
   osc.connect(gain).connect(c.destination)
-  osc.start(time)
-  osc.stop(time + 0.05)
+  osc.start(t)
+  osc.stop(t + 0.06)
 }
 
 // The AudioContext's own clock, for scheduling the metronome precisely
@@ -78,14 +115,49 @@ export function audioTime() {
   return unlockAudio()?.currentTime ?? 0
 }
 
-// Say something with the device's built-in voice (Web Speech API). The first call
-// must come from a tap on iOS, after which it also works from timers.
-export function speak(text) {
+// ---- speech: the device's built-in voices (Web Speech API)
+
+// Joke and character voices some phones ship with; never pick these automatically
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|junior|ralph|fred|kathy|eddy|flo|grandma|grandpa|reed|rocko|sandy|shelley/i
+
+// Higher = more natural sounding. Premium/Enhanced (iOS, macOS) and Natural/Neural/
+// Google (Android, Chrome, Edge) voices are far less robotic than the defaults.
+function voiceScore(v) {
+  let score = 0
+  if (/^en[-_]?us/i.test(v.lang)) score += 3
+  else if (/^en/i.test(v.lang)) score += 2
+  else return -100
+  if (/premium/i.test(v.name)) score += 6
+  if (/enhanced/i.test(v.name)) score += 5
+  if (/natural|neural/i.test(v.name)) score += 5
+  if (/google/i.test(v.name)) score += 3
+  if (/samantha|ava|allison|susan|zoe|evan|nathan|tom|serena|daniel|karen|moira/i.test(v.name)) score += 1
+  if (!v.localService) score += 1 // online voices are usually the better ones
+  if (NOVELTY.test(v.name)) score -= 50
+  return score
+}
+
+/** English voices on this device, most natural first. May be empty until they load. */
+export function englishVoices() {
+  const voices = window.speechSynthesis?.getVoices() ?? []
+  return voices
+    .filter((v) => voiceScore(v) > -10)
+    .sort((a, b) => voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name))
+}
+
+// Say something. `voiceURI` picks a voice; empty means the most natural one found.
+// The first call must come from a tap on iOS, after which it also works from timers.
+export function speak(text, voiceURI = '') {
   const synth = window.speechSynthesis
   if (!synth) return
   synth.cancel() // never let a backlog build up at fast countdowns
   const u = new SpeechSynthesisUtterance(text)
-  u.rate = 1.1
+  const voices = englishVoices()
+  const voice = voices.find((v) => v.voiceURI === voiceURI) ?? voices[0]
+  if (voice) {
+    u.voice = voice
+    u.lang = voice.lang
+  }
   synth.speak(u)
 }
 

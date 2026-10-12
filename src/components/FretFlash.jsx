@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Fretboard from './Fretboard.jsx'
 import { SHARP, fretsFor, noteLabel } from '../theory.js'
-import { audioTime, scheduleClick, speak, stopSpeaking } from '../audio.js'
-import { useWakeLock } from '../mobile.js'
+import { audioTime, englishVoices, scheduleClick, speak, stopSpeaking, unlockAudio } from '../audio.js'
+import { useHeadphonesAwake, useWakeLock } from '../mobile.js'
 
 export const FLASH_SECONDS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5]
 export const FLASH_COUNTS = [3, 5, 8, 12] // notes per run; 12 = every note once
@@ -19,6 +19,20 @@ export const whereText = (s, f) => `${ordinal(6 - s)} string, ${f === 0 ? 'open'
 // How the voice should say each note: letters alone can be read as words ("a"),
 // so spell them the way they sound
 const SPOKEN = ['C', 'C sharp', 'D', 'D sharp', 'E', 'F', 'F sharp', 'G', 'G sharp', 'Ay', 'A sharp', 'B']
+
+// Voices load asynchronously (Chrome fills the list after a 'voiceschanged' event)
+function useVoices() {
+  const [voices, setVoices] = useState(englishVoices)
+  useEffect(() => {
+    const synth = window.speechSynthesis
+    if (!synth) return
+    const on = () => setVoices(englishVoices())
+    synth.addEventListener?.('voiceschanged', on)
+    on()
+    return () => synth.removeEventListener?.('voiceschanged', on)
+  }, [])
+  return voices
+}
 
 function shuffle(list) {
   const a = [...list]
@@ -66,28 +80,48 @@ export default function FretFlash({ progress, updateSettings }) {
   const [idx, setIdx] = useState(0)
 
   useWakeLock(phase === 'run')
+  useHeadphonesAwake(phase === 'run')
 
   const step = steps[idx]
 
   const speakOn = settings.flashSpeak
+  const voiceURI = settings.flashVoice ?? ''
+  const voices = useVoices()
   const clickOn = settings.flashClick
 
-  // A metronome click on every position (accented when a new note starts), and the
-  // note's name said out loud when it changes.
-  function announce(list, i) {
-    const p = list[i]
-    const newNote = i === 0 || list[i - 1].n !== p.n
-    if (clickOn) scheduleClick(audioTime() + 0.01, newNote)
-    if (speakOn && newNote) speak(SPOKEN[p.pc])
+  // Timing works like the drill metronome: clicks are scheduled a little ahead on the
+  // audio clock (exact, unlike JS timers), and the screen follows the same timeline,
+  // so steps never drift and no click is scheduled too late to be heard.
+  const LEAD_S = 0.12 // first click this far ahead of the Start tap
+  const LOOKAHEAD_S = 0.25 // keep clicks scheduled this far ahead
+  const TICK_MS = 20
+  const clock = useRef(null) // { a0: audio time of step 0, p0: performance.now() of step 0, vis: ms }
+  const nextClick = useRef(0)
+
+  const isNewNote = (list, i) => i === 0 || list[i - 1].n !== list[i].n
+
+  function sayIfNew(list, i) {
+    if (speakOn && isNewNote(list, i)) speak(SPOKEN[list[i].pc], voiceURI)
   }
 
   function start() {
     window.scrollTo(0, 0)
     const list = buildSteps(picked, count, settings.strings, settings.maxFret)
+    if (!list.length) return
+    const ctx = unlockAudio() // inside the tap, which unlocks audio on iOS
+    const now = performance.now()
+    clock.current = {
+      a0: audioTime() + LEAD_S,
+      p0: now + LEAD_S * 1000,
+      // Bluetooth adds a delay before a sound is heard; show each step that much
+      // later so the click and the point on the neck land together
+      vis: Math.min(400, ((ctx?.outputLatency || ctx?.baseLatency || 0) * 1000)),
+    }
+    nextClick.current = 0
     setSteps(list)
     setIdx(0)
     setPhase('run')
-    if (list.length) announce(list, 0) // inside the tap, which unlocks audio and speech on iOS
+    sayIfNew(list, 0) // speech must also start inside the tap on iOS
   }
 
   function stop() {
@@ -97,19 +131,41 @@ export default function FretFlash({ progress, updateSettings }) {
 
   useEffect(() => stopSpeaking, [])
 
-  // one timeout per position: show it for `seconds`, then move on or finish
   useEffect(() => {
     if (phase !== 'run') return
-    const id = setTimeout(() => {
-      if (idx + 1 >= steps.length) {
+    let shown = 0
+    const id = setInterval(() => {
+      const c = clock.current
+      const now = performance.now()
+
+      // If iOS paused the audio clock (headphones switched, speech, a call), slide the
+      // audio timeline so it lines up with the screen again rather than bunching clicks
+      const drift = audioTime() - (c.a0 + (now - c.p0) / 1000)
+      if (Math.abs(drift) > 0.08) c.a0 += drift
+
+      if (clickOn) {
+        const horizon = audioTime() + LOOKAHEAD_S
+        while (nextClick.current < steps.length && c.a0 + nextClick.current * seconds <= horizon) {
+          const t = c.a0 + nextClick.current * seconds
+          // skip a click whose moment already passed (after a pause) instead of bursting
+          if (t >= audioTime() - 0.02) scheduleClick(t, isNewNote(steps, nextClick.current))
+          nextClick.current += 1
+        }
+      }
+
+      const step = Math.floor((now - c.p0 - c.vis) / (seconds * 1000))
+      if (step >= steps.length) {
         setPhase('done')
         return
       }
-      announce(steps, idx + 1)
-      setIdx(idx + 1)
-    }, seconds * 1000)
-    return () => clearTimeout(id)
-  }, [phase, idx, steps, seconds]) // eslint-disable-line react-hooks/exhaustive-deps
+      if (step > shown) {
+        shown = step
+        setIdx(step)
+        sayIfNew(steps, step)
+      }
+    }, TICK_MS)
+    return () => clearInterval(id)
+  }, [phase, steps, seconds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const running = phase === 'run'
 
@@ -179,6 +235,22 @@ export default function FretFlash({ progress, updateSettings }) {
             <input type="checkbox" checked={speakOn} onChange={(e) => updateSettings({ flashSpeak: e.target.checked })} />
             Say each note out loud
           </label>
+          {speakOn && voices.length > 0 && (
+            <div className="voice-row">
+              <select
+                className="voice-select"
+                value={voices.some((v) => v.voiceURI === voiceURI) ? voiceURI : ''}
+                onChange={(e) => updateSettings({ flashVoice: e.target.value })}
+                aria-label="Voice"
+              >
+                <option value="">Most natural ({voices[0].name})</option>
+                {voices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}</option>
+                ))}
+              </select>
+              <button className="btn" onClick={() => speak('C sharp. Ay. G.', voiceURI)}>Test</button>
+            </div>
+          )}
           <label className="check">
             <input type="checkbox" checked={clickOn} onChange={(e) => updateSettings({ flashClick: e.target.checked })} />
             Metronome click on each step

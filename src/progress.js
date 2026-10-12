@@ -24,6 +24,7 @@ export const defaultSettings = {
   flashCount: 5, // Find the note: random notes per run, each shown on every string
   flashNotes: [], // Find the note: notes the player picked (empty = random)
   flashSpeak: true, // Find the note: say each note out loud
+  flashVoice: '', // Find the note: chosen voice's voiceURI ('' = most natural found)
   flashClick: true, // Find the note: metronome click on each step
   strings: [0, 1, 2, 3, 4, 5],
   maxFret: 12,
