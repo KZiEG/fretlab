@@ -33,7 +33,8 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   and included in Export), plus starter sounds. Waza-Air: effects, starting with **Delay** and **Reverb**: what each does,
   where it sits in the signal chain, its controls and types, and pairings with other effects, each
   with starter settings drawn as knobs. Delay has a tempo-to-milliseconds calculator.
-- **Home** – level, XP, day streak, a colour-coded note map, and the notes needing attention.
+- **Home** – a metronome (30–250 BPM, slider, ±1/±5, tap tempo, 1–7 beats per bar, accent) that keeps
+  playing on every tab; a badge in the top bar shows the tempo and stops it. Also level, XP, day streak, a colour-coded note map, and the notes needing attention.
 
 On phones, the *Name the note* answer buttons stay pinned above the tab bar and the asked fret
 scrolls into view on its own. The screen stays awake during a timed drill or while the metronome
@@ -59,6 +60,7 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 | `src/progress.js` | XP, levels, streaks and the decay model (constants at the top). |
 | `src/me80.js` | ME-80 guide content (own words, from the owner's manual) and starter sounds. |
 | `src/rig.js` | Rig tab content: effects, pairings and starter settings (edit here to add effects). |
+| `src/metronome.js` | The app-wide metronome engine (lookahead scheduler, settings remembered). |
 | `src/mobile.js` | Phone helpers: vibration and the screen wake lock. |
 | `src/audio.js` | Plucked-string synth (Karplus-Strong), no audio files needed. |
 | `src/components/` | `Fretboard` (SVG, vertical on phones, horizontal on wide screens), `ChordDiagram`, `Triads`, `ShortcutCard`, `Drills` and `Metronome`. |

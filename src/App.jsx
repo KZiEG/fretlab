@@ -5,6 +5,7 @@ import Chords from './pages/Chords.jsx'
 import Scales from './pages/Scales.jsx'
 import Internalize from './pages/Internalize.jsx'
 import Rig from './pages/Rig.jsx'
+import { MetronomeBadge } from './components/Metronome.jsx'
 import { applyAnswer, applyDrill, loadState, saveState } from './progress.js'
 
 const ROUTES = [
@@ -89,6 +90,7 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <span className="logo">FretLab</span>
+        <MetronomeBadge />
       </header>
 
       <main>

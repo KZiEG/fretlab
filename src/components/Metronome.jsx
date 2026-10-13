@@ -1,75 +1,103 @@
-import { useEffect, useRef, useState } from 'react'
-import { audioTime, scheduleClick } from '../audio.js'
+import { useState } from 'react'
+import {
+  BEAT_CHOICES, MAX_BPM, MIN_BPM, nudgeBpm, setAccent, setBeats, setBpm, stop, tap, toggle, useMetronome,
+} from '../metronome.js'
 import { useHeadphonesAwake, useWakeLock } from '../mobile.js'
 
-// Standard lookahead scheduler: a timer checks often, but every click is
-// scheduled against the AudioContext's own clock, so the tempo stays exact
-// even though JS timers (setInterval) are not.
-const LOOKAHEAD_S = 0.12
-const TICK_MS = 25
-const BEATS_PER_BAR = 4
-const MIN_BPM = 40
-const MAX_BPM = 220
+function BeatDots({ beats, beat, running }) {
+  return (
+    <div className="met-beats" aria-hidden="true">
+      {Array.from({ length: beats }, (_, i) => (
+        <span key={i} className={`met-beat${i === 0 && beats > 1 ? ' first' : ''}${running && i === beat ? ' on' : ''}`} />
+      ))}
+    </div>
+  )
+}
 
-/** A small standalone metronome: tap tempo aside, just start/stop and a BPM stepper. */
-export default function Metronome() {
-  const [running, setRunning] = useState(false)
-  const [bpm, setBpm] = useState(80)
-  const [pulse, setPulse] = useState({ n: 0, accent: false })
-
-  const bpmRef = useRef(80)
-  const nextTime = useRef(0)
-  const beatCount = useRef(0)
-  const timer = useRef(null)
-
-  useWakeLock(running)
-  useHeadphonesAwake(running)
-
-  useEffect(() => () => clearInterval(timer.current), [])
-
-  function tick() {
-    const now = audioTime()
-    while (nextTime.current < now + LOOKAHEAD_S) {
-      const accent = beatCount.current % BEATS_PER_BAR === 0
-      scheduleClick(nextTime.current, accent)
-      const delayMs = Math.max(0, (nextTime.current - now) * 1000)
-      setTimeout(() => setPulse((p) => ({ n: p.n + 1, accent })), delayMs)
-      beatCount.current += 1
-      nextTime.current += 60 / bpmRef.current
-    }
-  }
-
-  function start() {
-    beatCount.current = 0
-    nextTime.current = audioTime() + 0.05
-    setRunning(true)
-    tick()
-    timer.current = setInterval(tick, TICK_MS)
-  }
-
-  function stop() {
-    clearInterval(timer.current)
-    timer.current = null
-    setRunning(false)
-  }
-
-  function changeBpm(delta) {
-    const next = Math.min(MAX_BPM, Math.max(MIN_BPM, bpmRef.current + delta))
-    bpmRef.current = next
-    setBpm(next)
-  }
+/** The full metronome (Home tab): speed, tap tempo, beats per bar, accent. */
+export function MetronomePanel() {
+  const m = useMetronome()
+  const [tapped, setTapped] = useState(0)
 
   return (
+    <section className="met-panel" aria-label="Metronome">
+      <div className="met-panel-top">
+        <div>
+          <div className="met-big">{m.bpm}</div>
+          <div className="muted small">beats per minute</div>
+        </div>
+        <button className={`btn met-play${m.running ? ' on' : ''}`} onClick={toggle}>
+          {m.running ? 'Stop' : 'Start'}
+        </button>
+      </div>
+
+      <BeatDots beats={m.beats} beat={m.beat} running={m.running} />
+
+      <input
+        className="met-slider"
+        type="range" min={MIN_BPM} max={MAX_BPM} step="1" value={m.bpm}
+        onChange={(e) => setBpm(e.target.value)}
+        aria-label="Tempo"
+      />
+      <div className="met-steps">
+        <button className="btn" onClick={() => nudgeBpm(-5)} aria-label="5 slower">−5</button>
+        <button className="btn" onClick={() => nudgeBpm(-1)} aria-label="1 slower">−1</button>
+        <button className="btn" onClick={() => setTapped(tap())}>
+          Tap{tapped === 1 ? '…' : ''}
+        </button>
+        <button className="btn" onClick={() => nudgeBpm(1)} aria-label="1 faster">+1</button>
+        <button className="btn" onClick={() => nudgeBpm(5)} aria-label="5 faster">+5</button>
+      </div>
+
+      <h4>Beats per bar</h4>
+      <div className="met-beat-choices">
+        {BEAT_CHOICES.map((b) => (
+          <button key={b} className={`chip${m.beats === b ? ' on' : ''}`} onClick={() => setBeats(b)}>{b}</button>
+        ))}
+      </div>
+      <label className="check">
+        <input type="checkbox" checked={m.accent} onChange={(e) => setAccent(e.target.checked)} />
+        Accent the first beat of each bar
+      </label>
+      <p className="muted small">
+        Keeps playing when you switch tabs. Tap the metronome badge at the top of any screen to stop it.
+      </p>
+    </section>
+  )
+}
+
+/** The compact bar above the timed drills: start/stop and speed, same metronome. */
+export default function Metronome() {
+  const m = useMetronome()
+  return (
     <div className="metronome">
-      <button className={`btn met-toggle${running ? ' on' : ''}`} onClick={running ? stop : start}>
-        {running ? 'Stop' : 'Metronome'}
+      <button className={`btn met-toggle${m.running ? ' on' : ''}`} onClick={toggle}>
+        {m.running ? 'Stop' : 'Metronome'}
       </button>
       <div className="met-bpm">
-        <button className="btn met-step" onClick={() => changeBpm(-5)} disabled={bpm <= MIN_BPM} aria-label="Slower">−</button>
-        <span className="met-num">{bpm} BPM</span>
-        <button className="btn met-step" onClick={() => changeBpm(5)} disabled={bpm >= MAX_BPM} aria-label="Faster">+</button>
+        <button className="btn met-step" onClick={() => nudgeBpm(-5)} disabled={m.bpm <= MIN_BPM} aria-label="Slower">−</button>
+        <span className="met-num">{m.bpm} BPM</span>
+        <button className="btn met-step" onClick={() => nudgeBpm(5)} disabled={m.bpm >= MAX_BPM} aria-label="Faster">+</button>
       </div>
-      <span key={pulse.n} className={`met-dot${pulse.accent ? ' accent' : ''}`} />
+      <span key={m.pulse} className={`met-dot${m.running && m.beat === 0 && m.beats > 1 && m.accent ? ' accent' : ''}`} />
     </div>
+  )
+}
+
+/**
+ * Shown in the top bar on every tab while the metronome runs: the tempo and a
+ * pulsing dot; tap to stop. Also keeps the screen and Bluetooth headphones awake.
+ */
+export function MetronomeBadge() {
+  const m = useMetronome()
+  useWakeLock(m.running)
+  useHeadphonesAwake(m.running)
+  if (!m.running) return null
+  return (
+    <button className="met-badge" onClick={stop} aria-label={`Metronome at ${m.bpm} BPM, tap to stop`}>
+      <span key={m.pulse} className={`met-dot${m.beat === 0 && m.beats > 1 && m.accent ? ' accent' : ''}`} />
+      {m.bpm} BPM
+      <span className="met-badge-stop">■</span>
+    </button>
   )
 }
