@@ -26,6 +26,7 @@ export const defaultSettings = {
   flashSpeak: true, // Find the note: say each note out loud
   flashVoice: '', // Find the note: chosen voice's voiceURI ('' = most natural found)
   flashClick: true, // Find the note: metronome click on each step
+  rigDevice: 'waza', // Rig tab: 'waza' | 'me80'
   strings: [0, 1, 2, 3, 4, 5],
   maxFret: 12,
   sound: true,
@@ -33,7 +34,7 @@ export const defaultSettings = {
 }
 
 export function emptyState() {
-  return { version: 1, cells: {}, xp: 0, days: {}, drills: {}, settings: { ...defaultSettings } }
+  return { version: 1, cells: {}, xp: 0, days: {}, drills: {}, patches: [], settings: { ...defaultSettings } }
 }
 
 export function loadState() {

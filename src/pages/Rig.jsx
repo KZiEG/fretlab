@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DELAY_NOTES, DEVICE, EFFECTS, delayMs } from '../rig.js'
+import Me80 from '../components/Me80.jsx'
 
 /** A 0-100 knob drawn like a pedal knob: 7 o'clock is 0, 5 o'clock is 100. */
 function Knob({ label, value }) {
@@ -79,13 +80,28 @@ function DelayCalc() {
   )
 }
 
-export default function Rig() {
+export default function Rig({ progress, updateSettings, setPatches }) {
+  const device = progress.settings.rigDevice === 'me80' ? 'me80' : 'waza'
+  return (
+    <div className="page">
+      <h2>Rig</h2>
+      <div className="segmented">
+        <button className={device === 'waza' ? 'on' : ''} onClick={() => updateSettings({ rigDevice: 'waza' })}>Waza-Air</button>
+        <button className={device === 'me80' ? 'on' : ''} onClick={() => updateSettings({ rigDevice: 'me80' })}>ME-80</button>
+      </div>
+      {device === 'me80'
+        ? <Me80 patches={progress.patches ?? []} setPatches={setPatches} />
+        : <WazaAir />}
+    </div>
+  )
+}
+
+function WazaAir() {
   const [effectId, setEffectId] = useState('delay')
   const fx = EFFECTS.find((e) => e.id === effectId)
 
   return (
-    <div className="page">
-      <h2>Rig</h2>
+    <>
       <p className="muted small">
         Effects on the {DEVICE.name}: what each one does and what it pairs well with. Settings use the knob names in
         the BOSS Tone Studio app and are starting points to tweak by ear.
@@ -152,6 +168,6 @@ export default function Rig() {
           {p.note && <p className="muted small">{p.note}</p>}
         </section>
       ))}
-    </div>
+    </>
   )
 }

@@ -1,8 +1,47 @@
 import { useMemo, useState } from 'react'
 import scaleData from '../data/scales.json'
 import Fretboard from '../components/Fretboard.jsx'
-import { MAX_FRET, OPEN_MIDI, noteLabel, pcAt, spell } from '../theory.js'
+import { MAX_FRET, OPEN_MIDI, noteLabel, pcAt, spellDegrees } from '../theory.js'
 import { playSequence, unlockAudio } from '../audio.js'
+
+// Size of each step between scale notes, in semitones (= frets on one string)
+const STEP = {
+  1: { label: 'H', name: 'half step', frets: '1 fret' },
+  2: { label: 'W', name: 'whole step', frets: '2 frets' },
+  3: { label: 'W+H', name: 'whole + half step', frets: '3 frets' },
+}
+
+/** The scale's notes with the whole/half step between each one, root to octave. */
+function ScalePattern({ notes, intervals }) {
+  const all = [...intervals, 12]
+  const steps = all.slice(1).map((v, i) => v - all[i])
+  return (
+    <section className="pattern" aria-label="Scale pattern">
+      <h4>Scale pattern</h4>
+      <div className="pattern-formula">
+        {steps.map((st, i) => (
+          <span key={i} className={`step step-${st}`}>{STEP[st]?.label ?? st}</span>
+        ))}
+      </div>
+      <div className="pattern-grid" style={{ gridTemplateColumns: `repeat(${notes.length * 2}, 1fr)` }}>
+        {notes.map((n, i) => (
+          <span key={`n${i}`} className={`pattern-note${i === 0 || i === notes.length - 1 ? ' root' : ''}`} style={{ gridColumn: `${2 * i + 1} / span 2`, gridRow: 1 }}>
+            {n}
+          </span>
+        ))}
+        {steps.map((st, i) => (
+          <span key={`s${i}`} className={`pattern-step step-${st}`} style={{ gridColumn: `${2 * i + 2} / span 2`, gridRow: 2 }}>
+            {STEP[st]?.label ?? st}
+          </span>
+        ))}
+      </div>
+      <p className="muted small">
+        {[...new Set(steps)].sort().map((st) => `${STEP[st].label} = ${STEP[st].name} (${STEP[st].frets})`).join(' · ')}.
+        Play the pattern up one string from the root to hear the scale.
+      </p>
+    </section>
+  )
+}
 
 export default function Scales() {
   const [root, setRoot] = useState(9)
@@ -13,6 +52,7 @@ export default function Scales() {
   const scale = scaleData.scales.find((s) => s.id === scaleId)
   const windows = scaleData.windows[root][scaleId]
   const pcs = scale.intervals.map((i) => (root + i) % 12)
+  const names = spellDegrees(root, scale.intervals, scale.degrees) // names[i] spells pcs[i]
   const activeWindow = pos === 'all' ? null : windows[pos] ?? null
 
   const marks = useMemo(() => {
@@ -25,7 +65,7 @@ export default function Scales() {
         out.push({
           s, f,
           kind: !inside ? 'ghost' : idx === 0 ? 'root' : 'note',
-          label: !inside ? null : labels === 'note' ? spell(pcs[idx], root) : scale.degrees[idx],
+          label: !inside ? null : labels === 'note' ? names[idx] : scale.degrees[idx],
         })
       }
     }
@@ -63,13 +103,15 @@ export default function Scales() {
 
       <div className="chord-head">
         <div>
-          <div className="chord-title">{spell(root, root)} {scale.name}</div>
+          <div className="chord-title">{names[0]} {scale.name}</div>
           <div className="muted">
-            {pcs.map((pc) => spell(pc, root)).join(' · ')} &nbsp;({scale.degrees.join(' ')})
+            {names.join(' · ')} &nbsp;({scale.degrees.join(' ')})
           </div>
         </div>
         <button className="btn" onClick={play}>Play</button>
       </div>
+
+      <ScalePattern notes={[...names, names[0]]} intervals={scale.intervals} />
 
       <h4>Position</h4>
       <div className="chips scroll">
