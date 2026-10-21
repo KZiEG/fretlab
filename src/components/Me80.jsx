@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ME80, SECTIONS, STARTERS, clockLabel } from '../me80.js'
+import HookUp from './HookUp.jsx'
 
 const byId = Object.fromEntries(SECTIONS.map((s) => [s.id, s]))
 // sections you can save on a patch card, in signal order
@@ -244,14 +245,15 @@ function PatchCards({ patches, setPatches }) {
 // ------------------------------------------------------------------ page
 
 export default function Me80({ patches, setPatches }) {
-  const [view, setView] = useState('guide') // guide | sounds
+  const [view, setView] = useState('guide') // guide | hookup | sounds
   const [secId, setSecId] = useState('comp')
   const sec = byId[secId]
 
   return (
     <>
-      <div className="segmented small">
+      <div className="segmented small three">
         <button className={view === 'guide' ? 'on' : ''} onClick={() => setView('guide')}>Effects guide</button>
+        <button className={view === 'hookup' ? 'on' : ''} onClick={() => setView('hookup')}>Hook up</button>
         <button className={view === 'sounds' ? 'on' : ''} onClick={() => setView('sounds')}>My sounds</button>
       </div>
 
@@ -267,6 +269,8 @@ export default function Me80({ patches, setPatches }) {
           </div>
           <SectionGuide sec={sec} />
         </>
+      ) : view === 'hookup' ? (
+        <HookUp />
       ) : (
         <PatchCards patches={patches} setPatches={setPatches} />
       )}
