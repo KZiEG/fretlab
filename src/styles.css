@@ -396,3 +396,20 @@ p { margin: 0; }
 .segmented.three { grid-template-columns: repeat(3, 1fr); }
 .hookup { display: flex; flex-direction: column; gap: 12px; }
 .hk-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+
+/* ---- ME-90 how-to */
+.segmented.four { grid-template-columns: repeat(4, 1fr); }
+.segmented.four button { padding: 8px 2px; font-size: 0.85rem; }
+.howto { display: flex; flex-direction: column; gap: 10px; }
+.howto h3 { margin: 6px 0 0; }
+.mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mode-card { background: var(--panel); border: 1px solid var(--line); border-top: 4px solid; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
+.mode-card.manual { border-top-color: #4f8df0; }
+.mode-card.memory { border-top-color: var(--bad); }
+.mode-light { font-size: 0.75rem; font-weight: 700; }
+.mode-card.manual .mode-light { color: #4f8df0; }
+.mode-card.memory .mode-light { color: var(--bad); }
+.howto-topic summary { padding: 4px 0; }
+.howto-topic[open] summary { margin-bottom: 8px; color: var(--accent); }
+.howto-topic h4 { margin: 12px 0 6px; }
+.howto-intro { margin-bottom: 8px; }

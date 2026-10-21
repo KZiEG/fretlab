@@ -4,8 +4,9 @@
 
 export const ME90 = {
   name: 'BOSS ME-90',
-  // signal flow, guitar on the left; the SEND/RETURN loop sits right after the PREAMP
-  chain: ['PEDAL FX', 'COMP/FX1', 'OD/DS', 'PREAMP', 'SEND/RETURN', 'EQ/FX2', 'NS', 'VOLUME', 'MOD', 'DELAY', 'REVERB'],
+  // signal flow, guitar on the left. SEND/RETURN sits before the PREAMP by default
+  // (system setting S0); S1 moves it after the PREAMP.
+  chain: ['PEDAL FX', 'COMP/FX1', 'OD/DS', 'SEND/RETURN', 'PREAMP', 'EQ/FX2', 'NS', 'VOLUME', 'MOD', 'DELAY', 'REVERB'],
 }
 
 // Knob value 0-10 drawn as a clock position: 0 = 7 o'clock (all the way down),
@@ -155,7 +156,7 @@ export const SECTIONS = [
     title: 'EQ / Effect 2',
     switch: 'The BANK ▲ (EQ) pedal turns it on and off in manual or memory edit mode.',
     summary:
-      'Sits after the preamp (and after the SEND/RETURN loop). Use it as a 3-band EQ or as a second effect slot. Knob 1 (MODE) picks a version of most effects.',
+      'Sits after the preamp. Use it as a 3-band EQ or as a second effect slot. Knob 1 (MODE) picks a version of most effects.',
     knobLabels: ['1', '2', '3', '4'],
     types: [
       { name: 'PHASER', what: 'Swirling sweep. MODE 1 NORMAL, or MODE 2 SCRIPT (MXR Phase 90 style).', knobs: ['MODE: NORMAL or SCRIPT', 'RATE: speed', 'DEPTH: how deep', 'RESONANCE / E.LEVEL: intensity (NORMAL) or effect volume (SCRIPT)'] },
