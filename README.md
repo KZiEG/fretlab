@@ -29,7 +29,7 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   40-220 BPM) sits above the drills, independent of the timer.
 - **Rig** – switch between the BOSS **Waza-Air** and **ME-80**. ME-80: an effects guide section by
   section in signal-chain order (each type with its explanation and what knobs 1, 2, 3… do), *Hook up*,
-  diagrams for connecting it to an amp (front input or effects loop, and why the 4-cable method needs SEND/RETURN);
+  how to connect it to an amp's effects loop for a 4-cable-style signal order;
   and *My sounds*, patch cards that save your knob positions as clock positions (kept with your progress
   and included in Export), plus starter sounds. Waza-Air: effects, starting with **Delay** and **Reverb**: what each does,
   where it sits in the signal chain, its controls and types, and pairings with other effects, each

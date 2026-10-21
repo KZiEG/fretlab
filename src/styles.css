@@ -392,24 +392,7 @@ p { margin: 0; }
 .met-beat-choices { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .met-beat-choices .chip { padding: 8px 0; min-width: 0; }
 
-/* ---- ME-80 hook-up diagrams */
+/* ---- ME-80 hook-up */
 .segmented.three { grid-template-columns: repeat(3, 1fr); }
 .hookup { display: flex; flex-direction: column; gap: 12px; }
-.hk-safety { display: flex; flex-direction: column; gap: 4px; background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 12px; font-size: 0.92rem; }
-.hk-safety strong { color: var(--accent); }
-.hk-diagram { width: 100%; height: auto; }
-.hk-box { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; }
-.hk-name { fill: var(--text); font-size: 13px; font-weight: 800; }
-.hk-group { fill: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0.06em; }
-.hk-jack text { fill: var(--muted); font-size: 9px; font-weight: 700; }
-.hk-jack circle { fill: #11141a; stroke: #6b7385; stroke-width: 2; }
-.hk-jack .hk-hole { fill: #000; stroke: none; }
-.hk-jack.active text { fill: var(--text); }
-.hk-jack.active circle:not(.hk-hole) { stroke: var(--accent); }
-.hk-jack.dim { opacity: 0.4; }
-.hk-cable path { fill: none; stroke-width: 4; stroke-dasharray: 9 6; stroke-linejoin: round; }
-.hk-cable rect { stroke: #fff; stroke-width: 1.5; }
-.hk-cable text { fill: #fff; font-size: 13px; font-weight: 800; }
-.hk-cable.c1 path { stroke: #f07a3e; } .hk-cable.c1 rect { fill: #f07a3e; }
-.hk-cable.c2 path { stroke: #4f8df0; } .hk-cable.c2 rect { fill: #4f8df0; }
-.hk-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.hk-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
