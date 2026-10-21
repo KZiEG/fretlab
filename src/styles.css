@@ -29,6 +29,7 @@ body {
 
 .app { min-height: 100vh; min-height: 100dvh; padding-bottom: calc(var(--tabbar-h) + 16px + var(--safe-bottom)); }
 .topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px;
   padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 8px;
   border-bottom: 1px solid var(--line);
 }
@@ -328,7 +329,7 @@ p { margin: 0; }
 .step-1 { color: var(--accent); border-color: var(--accent); }
 .step-3 { color: var(--note); border-color: var(--note); }
 
-/* ---- ME-80 guide and patch cards */
+/* ---- ME-90 guide and patch cards */
 .me-guide { display: flex; flex-direction: column; gap: 10px; }
 .me-guide h3 { margin: 4px 0 0; }
 .me-types { display: flex; flex-direction: column; gap: 8px; }
@@ -364,3 +365,34 @@ p { margin: 0; }
 .dial { flex: 0 0 auto; }
 .patch-card .knob { width: 76px; }
 .patch-card .knob-val { white-space: nowrap; font-size: 0.78rem; }
+
+/* ---- app-wide metronome */
+.met-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.met-panel h4 { margin: 2px 0 -4px; }
+.met-panel .check { margin-top: 0; }
+.met-panel-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.met-big { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.met-play { min-width: 112px; font-size: 1.1rem; }
+.met-play.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.met-beats { display: flex; gap: 8px; }
+.met-beat { flex: 1; height: 10px; border-radius: 5px; background: var(--line); transition: background 0.05s; }
+.met-beat.first { background: #3d4352; }
+.met-beat.on { background: var(--note); }
+.met-beat.first.on { background: var(--accent); }
+.met-slider { width: 100%; height: 32px; accent-color: var(--accent); }
+.met-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.met-steps .btn { padding: 10px 0; }
+.met-badge {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 4px 12px;
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--accent); border-radius: 999px;
+  font: inherit; font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer;
+}
+.met-badge .met-dot { width: 10px; height: 10px; }
+.met-badge-stop { color: var(--accent); font-size: 0.75rem; }
+.met-beat-choices { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.met-beat-choices .chip { padding: 8px 0; min-width: 0; }
+
+/* ---- ME-90 hook-up */
+.segmented.three { grid-template-columns: repeat(3, 1fr); }
+.hookup { display: flex; flex-direction: column; gap: 12px; }
+.hk-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }

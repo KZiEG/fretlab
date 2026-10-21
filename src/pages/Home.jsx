@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { MetronomePanel } from '../components/Metronome.jsx'
 import Fretboard from '../components/Fretboard.jsx'
 import { STRING_ORDINALS, SHARP, pcAt } from '../theory.js'
 import {
@@ -79,6 +80,9 @@ export default function Home({ progress, setProgress }) {
       </div>
 
       <a className="btn primary wide" href="#/trainer">Start training</a>
+
+      <h3>Metronome</h3>
+      <MetronomePanel />
 
       <h3>Note map</h3>
       <p className="muted small">

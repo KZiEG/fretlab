@@ -1,9 +1,13 @@
 import { useState } from 'react'
-import { ME80, SECTIONS, STARTERS, clockLabel } from '../me80.js'
+import { ME90, SECTIONS, STARTERS, clockLabel } from '../me90.js'
+import HookUp from './HookUp.jsx'
 
 const byId = Object.fromEntries(SECTIONS.map((s) => [s.id, s]))
 // sections you can save on a patch card, in signal order
 const EDITABLE = ['pedalfx', 'comp', 'odds', 'preamp', 'eqfx2', 'ns', 'mod', 'delay', 'reverb']
+
+// every type a section can use: its own 1-11 list plus the app swap-ins
+const allTypes = (sec) => [...sec.types, ...(sec.swaps ?? [])]
 
 const knobName = (role) => (role && role !== '—' ? role.split(':')[0] : null)
 
@@ -21,7 +25,7 @@ function Dial({ value, size = 36 }) {
 function Chain({ on = [] }) {
   return (
     <div className="chain" aria-label="Signal chain">
-      {ME80.chain.map((s, i) => (
+      {ME90.chain.map((s, i) => (
         <span key={s} className="chain-step">
           {i > 0 && <span className="chain-arrow">→</span>}
           <span className={`chain-box${on.includes(s) ? ' on' : ''}`}>{s}</span>
@@ -33,41 +37,68 @@ function Chain({ on = [] }) {
 
 // ------------------------------------------------------------------ guide
 
+function KnobRow({ knobs }) {
+  if (!knobs.length || knobs.every((k) => k === '—')) return null
+  return (
+    <div className="me-knobs" style={{ gridTemplateColumns: `repeat(${knobs.length}, 1fr)` }}>
+      {knobs.map((k, j) => (
+        <div key={j} className={`me-knob${k === '—' ? ' unused' : ''}`}>
+          <span className="me-knob-num">Knob {j + 1}</span>
+          {k === '—' ? <span className="muted">not used</span> : (
+            <>
+              <strong>{k.split(':')[0]}</strong>
+              <span className="muted small">{k.split(':').slice(1).join(':')}</span>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function TypeCards({ types, start = 1, shared, slot }) {
+  return (
+    <div className="me-types">
+      {types.map((t, i) => (
+        <div key={t.name} className="me-type">
+          <div className="me-type-head">
+            <span className="me-type-num">{slot ?? start + i}</span>
+            <strong>{t.name}</strong>
+          </div>
+          <p className="me-type-what">{t.what}</p>
+          {!shared && <KnobRow knobs={t.knobs} />}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function SectionGuide({ sec }) {
+  const shared = !!sec.sharedKnobs
   return (
     <div className="me-guide">
       <h3>{sec.name} <span className="muted small">· {sec.title}</span></h3>
       <p>{sec.summary}</p>
       <p className="muted small">{sec.switch}</p>
+      {shared && (
+        <>
+          <h4>Knobs (all types)</h4>
+          <KnobRow knobs={sec.types[0].knobs} />
+        </>
+      )}
       {sec.types.length > 0 && (
         <>
-          <h4>Types and what the knobs do</h4>
-          <div className="me-types">
-            {sec.types.map((t, i) => (
-              <div key={t.name} className="me-type">
-                <div className="me-type-head">
-                  <span className="me-type-num">{i + 1}</span>
-                  <strong>{t.name}</strong>
-                </div>
-                <p className="me-type-what">{t.what}</p>
-                {t.knobs.length > 0 && t.knobs.some((k) => k !== '—') && (
-                  <div className="me-knobs" style={{ gridTemplateColumns: `repeat(${t.knobs.length}, 1fr)` }}>
-                    {t.knobs.map((k, j) => (
-                      <div key={j} className={`me-knob${k === '—' ? ' unused' : ''}`}>
-                        <span className="me-knob-num">Knob {j + 1}</span>
-                        {k === '—' ? <span className="muted">not used</span> : (
-                          <>
-                            <strong>{k.split(':')[0]}</strong>
-                            <span className="muted small">{k.split(':').slice(1).join(':')}</span>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <h4>{shared ? 'Types' : 'Types and what the knobs do'}</h4>
+          <TypeCards types={sec.types} shared={shared} />
+        </>
+      )}
+      {sec.swaps && (
+        <>
+          <h4>Swap-in options for slot {sec.swapSlot}</h4>
+          <p className="muted small">
+            With the BOSS TONE STUDIO for ME-90 app you can replace type {sec.swapSlot} with one of these, per patch.
+          </p>
+          <TypeCards types={sec.swaps} shared={shared} slot={sec.swapSlot} />
         </>
       )}
     </div>
@@ -95,12 +126,12 @@ function PatchView({ patch, onEdit, onDelete, onCopy }) {
         </div>
       </div>
       {patch.note && <p className="muted small">{patch.note}</p>}
-      <Chain on={used.map((id) => (id === 'ns' ? 'NS' : byId[id].name))} />
+      <Chain on={used.map((id) => byId[id].name)} />
       <div className="patch">
         {used.map((id) => {
           const sec = byId[id]
           const st = patch.sections[id]
-          const type = sec.types.find((t) => t.name === st.type)
+          const type = allTypes(sec).find((t) => t.name === st.type)
           return (
             <div key={id} className="patch-block">
               <div className="patch-head">
@@ -153,7 +184,7 @@ function PatchEditor({ initial, onSave, onCancel }) {
         const sec = byId[id]
         const st = p.sections[id]
         const on = !!st?.on
-        const type = sec.types.find((t) => t.name === st?.type)
+        const type = allTypes(sec).find((t) => t.name === st?.type)
         return (
           <div key={id} className={`edit-sec${on ? ' on' : ''}`}>
             <label className="check edit-sec-head">
@@ -172,6 +203,12 @@ function PatchEditor({ initial, onSave, onCancel }) {
                 <span>Type</span>
                 <select value={st.type} onChange={(e) => setSec(id, { type: e.target.value })}>
                   {sec.types.map((t, i) => <option key={t.name} value={t.name}>{i + 1}. {t.name}</option>)}
+                  {sec.swaps && (
+                    <optgroup label={`Slot ${sec.swapSlot} swap-ins (app)`}>
+                      {sec.swaps.map((t) => <option key={t.name} value={t.name}>{sec.swapSlot}. {t.name}</option>)}
+                    </optgroup>
+                  )}
+                  {st.type && !allTypes(sec).some((t) => t.name === st.type) && <option value={st.type}>{st.type}</option>}
                 </select>
               </label>
             )}
@@ -243,22 +280,23 @@ function PatchCards({ patches, setPatches }) {
 
 // ------------------------------------------------------------------ page
 
-export default function Me80({ patches, setPatches }) {
-  const [view, setView] = useState('guide') // guide | sounds
+export default function Me90({ patches, setPatches }) {
+  const [view, setView] = useState('guide') // guide | hookup | sounds
   const [secId, setSecId] = useState('comp')
   const sec = byId[secId]
 
   return (
     <>
-      <div className="segmented small">
+      <div className="segmented small three">
         <button className={view === 'guide' ? 'on' : ''} onClick={() => setView('guide')}>Effects guide</button>
+        <button className={view === 'hookup' ? 'on' : ''} onClick={() => setView('hookup')}>Hook up</button>
         <button className={view === 'sounds' ? 'on' : ''} onClick={() => setView('sounds')}>My sounds</button>
       </div>
 
       {view === 'guide' ? (
         <>
           <h4>Signal chain</h4>
-          <Chain on={[sec.name === 'NS' ? 'NS' : sec.name]} />
+          <Chain on={[sec.name]} />
           <p className="muted small">Your guitar goes in on the left; each section feeds the next. Tap a section below to read about it.</p>
           <div className="chips scroll">
             {SECTIONS.map((s) => (
@@ -267,12 +305,14 @@ export default function Me80({ patches, setPatches }) {
           </div>
           <SectionGuide sec={sec} />
         </>
+      ) : view === 'hookup' ? (
+        <HookUp />
       ) : (
         <PatchCards patches={patches} setPatches={setPatches} />
       )}
 
       <p className="muted small">
-        Written in our own words from the ME-80 owner&rsquo;s manual; see your manual for full details. FretLab is not
+        Written in our own words from the ME-90 Parameter Guide; see your manual for full details. FretLab is not
         affiliated with Roland or BOSS.
       </p>
     </>
