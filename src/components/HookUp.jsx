@@ -1,45 +1,61 @@
-// How to connect the ME-80 to an amp the way closest to the 4-cable method. Our own words.
+// How to connect a BOSS ME-90 to an amp with the 4-cable method. Our own words.
 
-const STEPS = [
-  'Turn the amp’s volume all the way down.',
-  'Cable 1: guitar → ME-80 INPUT.',
-  'Cable 2: ME-80 OUTPUT L/MONO → the amp’s FX LOOP RETURN (on the back). Leave the amp’s SEND and front INPUT empty.',
-  'If the loop has a level switch (e.g. −10 dBV / +4 dBu), set it to −10 dBV, the setting for pedals.',
-  'Switch the ME-80 on first, then the amp. When you finish, switch the amp off first. That avoids loud pops.',
-  'Turn the ME-80’s PREAMP section on and pick an amp type. It is now your amp sound; set GAIN and EQ there.',
-  'Bring the amp’s master volume (and loop level, if it has one) up slowly to a comfortable level.',
+const CABLES = [
+  ['Cable 1', 'Guitar → ME-90 INPUT.'],
+  ['Cable 2', 'ME-90 SEND → amp INPUT (front). This feeds your drive sounds into the amp’s preamp.'],
+  ['Cable 3', 'Amp FX LOOP SEND → ME-90 RETURN. The amp’s own preamp sound comes back into the ME-90.'],
+  ['Cable 4', 'ME-90 OUTPUT L/MONO → amp FX LOOP RETURN. The finished sound goes to the amp’s power amp and speaker.'],
+]
+
+const SETUP = [
+  'Turn the amp’s volume all the way down before connecting anything.',
+  'Set the ME-90’s Gt.AMP/LINE switch (next to the outputs) to Gt.AMP, since the sound is going to a guitar amp’s speaker.',
+  'Switch the ME-90 on first, then the amp. When you finish, switch the amp off first. That avoids loud pops.',
+  'Turn the ME-90’s own amp (preamp) off: the real amp is doing that job now.',
+  'Turn on the ME-90’s SEND/RETURN loop and place it after your drive effects and before modulation, delay and reverb. Check your ME-90 manual for where the loop position is set.',
+  'If the amp’s effects loop has a level switch (e.g. −10 dBV / +4 dBu), start on −10 dBV.',
+  'Bring the amp’s volume up slowly. Use the amp’s channel, gain and tone knobs as usual: they’re part of the sound again.',
 ]
 
 export default function HookUp() {
   return (
     <div className="hookup">
       <section className="shortcut">
-        <h3>Connecting to an amp (like the 4-cable method)</h3>
+        <h3>The 4-cable method (ME-90)</h3>
         <p className="why">
-          The 4-cable method puts drive pedals in front of the amp and modulation, delay and reverb in the amp’s
-          effects loop, so the echoes come after the distortion. The ME-80 can’t be split like that: it has no SEND and
-          RETURN jacks, just one input and one output.
+          The 4-cable method uses your real amp for the amp sound and the ME-90 for everything around it. Drives and
+          wah go <strong>before</strong> the amp’s preamp, and modulation, delay and reverb go <strong>after</strong>{' '}
+          it through the amp’s effects loop, so echoes stay clean even when the amp is distorting.
         </p>
-        <p className="why">
-          You get the closest result by running the whole ME-80, amp models included, into the amp’s effects loop. The
-          ME-80 makes the sound in the same order as the 4-cable method: drive, then amp, then modulation, delay and
-          reverb. Your amp just makes it loud through its speaker.
+        <p className="muted small">
+          You need an amp with an effects loop (FX LOOP SEND and RETURN on the back) and four instrument cables.
         </p>
-        <p className="muted small">You need an amp with an effects loop (FX LOOP SEND and RETURN jacks) and two cables.</p>
 
-        <h4>Hook it up</h4>
+        <h4>The four cables</h4>
         <ol className="hk-steps">
-          {STEPS.map((s) => <li key={s}>{s}</li>)}
+          {CABLES.map(([n, what]) => (
+            <li key={n}><strong>{n}:</strong> {what}</li>
+          ))}
         </ol>
+
+        <h4>Set up</h4>
+        <ol className="hk-steps">
+          {SETUP.map((s) => <li key={s}>{s}</li>)}
+        </ol>
+
+        <h4>The sound path</h4>
+        <p className="why">
+          Guitar → ME-90 drives and wah → amp preamp (channel, gain, tone) → ME-90 modulation, delay and reverb → amp
+          power amp → speaker.
+        </p>
 
         <h4>Good to know</h4>
         <ul className="tips">
-          <li>The amp’s own channel, gain and tone knobs are skipped this way; tone comes from the ME-80.</li>
-          <li>Too quiet? Raise the PREAMP LEVEL or the ME-80’s output volume before cranking the amp.</li>
+          <li>No sound? Check cables 2 and 3 aren’t swapped, and that the ME-90’s SEND/RETURN loop is switched on.</li>
+          <li>Hum or buzz: a cheap or long cable is the usual cause; keep loop cables short.</li>
           <li>
-            To use your amp’s own sound instead, plug ME-80 OUTPUT L/MONO into the amp’s front INPUT, turn the ME-80’s
-            PREAMP off and keep the amp clean. Delay and reverb then sit before the amp, so they work best with a clean
-            amp.
+            Simpler 2-cable option: guitar → ME-90 INPUT, ME-90 OUTPUT L/MONO → amp front INPUT, with the ME-90’s amp
+            off and the amp clean. Delay and reverb then go before the amp, so keep its gain low.
           </li>
         </ul>
       </section>
