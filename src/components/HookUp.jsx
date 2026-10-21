@@ -13,7 +13,7 @@ const SETUP = [
   'Set OUTPUT SELECT to the “RETURN” option closest to your amp, because the OUTPUT now feeds the amp’s effects return: e.g. TUBE COMBO 112 RETURN for a 1×12 tube combo, TUBE STACK 412 RETURN for a head and 4×12, or the KATANA / JC-120 RETURN options. It’s a system setting: in manual mode press EDIT until OUTPUT SELECT shows, pick with the BANK pedals, then press WRITE.',
   'Switch the ME-90 on first, then the amp. When you finish, switch the amp off first. That avoids loud pops.',
   'Turn the ME-90’s own amp (preamp) off: the real amp is doing that job now.',
-  'Turn on the ME-90’s SEND/RETURN loop. It always sits right after the PREAMP, so your drives come before the amp and EQ/FX2, MOD, DELAY and REVERB come after it, exactly what the 4-cable method needs. (See your owner’s manual or the BOSS TONE STUDIO for ME-90 app for switching it on.)',
+  'Turn on the ME-90’s SEND/RETURN loop: hold EDIT and press the CTL pedal until the display shows 1 (0 = off). This is stored per patch, so save each patch you use this way. Where the loop sits (S0 before / S1 after the preamp) doesn’t matter here, because the ME-90’s own preamp is off: your drives always come before the amp, and EQ/FX2, MOD, DELAY and REVERB after it.',
   'If the amp’s effects loop has a level switch (e.g. −10 dBV / +4 dBu), start on −10 dBV.',
   'Bring the amp’s volume up slowly. Use the amp’s channel, gain and tone knobs as usual: they’re part of the sound again.',
 ]
@@ -52,7 +52,8 @@ export default function HookUp() {
 
         <h4>Good to know</h4>
         <ul className="tips">
-          <li>No sound? Check cables 2 and 3 aren’t swapped, and that the ME-90’s SEND/RETURN loop is switched on.</li>
+          <li>No sound? Check cables 2 and 3 aren’t swapped, and that the loop is on for this patch (hold EDIT + press CTL).</li>
+          <li>Want a footswitch for the loop? Set the system setting r1 and the REV footswitch turns it on/off in manual mode.</li>
           <li>Hum or buzz: a cheap or long cable is the usual cause; keep loop cables short.</li>
           <li>
             Simpler 2-cable options: ME-90 OUTPUT L/MONO → amp front INPUT (OUTPUT SELECT on an “INPUT” option, ME-90

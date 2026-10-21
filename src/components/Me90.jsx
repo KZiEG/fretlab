@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ME90, SECTIONS, STARTERS, clockLabel } from '../me90.js'
 import HookUp from './HookUp.jsx'
+import HowTo from './HowTo.jsx'
 
 const byId = Object.fromEntries(SECTIONS.map((s) => [s.id, s]))
 // sections you can save on a patch card, in signal order
@@ -281,16 +282,17 @@ function PatchCards({ patches, setPatches }) {
 // ------------------------------------------------------------------ page
 
 export default function Me90({ patches, setPatches }) {
-  const [view, setView] = useState('guide') // guide | hookup | sounds
+  const [view, setView] = useState('howto') // howto | guide | hookup | sounds
   const [secId, setSecId] = useState('comp')
   const sec = byId[secId]
 
   return (
     <>
-      <div className="segmented small three">
-        <button className={view === 'guide' ? 'on' : ''} onClick={() => setView('guide')}>Effects guide</button>
+      <div className="segmented small four">
+        <button className={view === 'howto' ? 'on' : ''} onClick={() => setView('howto')}>How to</button>
+        <button className={view === 'guide' ? 'on' : ''} onClick={() => setView('guide')}>Effects</button>
         <button className={view === 'hookup' ? 'on' : ''} onClick={() => setView('hookup')}>Hook up</button>
-        <button className={view === 'sounds' ? 'on' : ''} onClick={() => setView('sounds')}>My sounds</button>
+        <button className={view === 'sounds' ? 'on' : ''} onClick={() => setView('sounds')}>Sounds</button>
       </div>
 
       {view === 'guide' ? (
@@ -305,6 +307,8 @@ export default function Me90({ patches, setPatches }) {
           </div>
           <SectionGuide sec={sec} />
         </>
+      ) : view === 'howto' ? (
+        <HowTo />
       ) : view === 'hookup' ? (
         <HookUp />
       ) : (
@@ -312,7 +316,7 @@ export default function Me90({ patches, setPatches }) {
       )}
 
       <p className="muted small">
-        Written in our own words from the ME-90 Parameter Guide; see your manual for full details. FretLab is not
+        Written in our own words from the ME-90 Parameter Guide and Reference Manual; see your manual for full details. FretLab is not
         affiliated with Roland or BOSS.
       </p>
     </>
