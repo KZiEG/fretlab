@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { DELAY_NOTES, DEVICE, EFFECTS, delayMs } from '../rig.js'
-import Me80 from '../components/Me80.jsx'
+import Me90 from '../components/Me90.jsx'
 
 /** A 0-100 knob drawn like a pedal knob: 7 o'clock is 0, 5 o'clock is 100. */
 function Knob({ label, value }) {
@@ -81,16 +81,17 @@ function DelayCalc() {
 }
 
 export default function Rig({ progress, updateSettings, setPatches }) {
-  const device = progress.settings.rigDevice === 'me80' ? 'me80' : 'waza'
+  // 'me80' was this tab's earlier name for the same multi-effects page
+  const device = ['me90', 'me80'].includes(progress.settings.rigDevice) ? 'me90' : 'waza'
   return (
     <div className="page">
       <h2>Rig</h2>
       <div className="segmented">
         <button className={device === 'waza' ? 'on' : ''} onClick={() => updateSettings({ rigDevice: 'waza' })}>Waza-Air</button>
-        <button className={device === 'me80' ? 'on' : ''} onClick={() => updateSettings({ rigDevice: 'me80' })}>ME-80</button>
+        <button className={device === 'me90' ? 'on' : ''} onClick={() => updateSettings({ rigDevice: 'me90' })}>ME-90</button>
       </div>
-      {device === 'me80'
-        ? <Me80 patches={progress.patches ?? []} setPatches={setPatches} />
+      {device === 'me90'
+        ? <Me90 patches={progress.patches ?? []} setPatches={setPatches} />
         : <WazaAir />}
     </div>
   )

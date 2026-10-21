@@ -329,7 +329,7 @@ p { margin: 0; }
 .step-1 { color: var(--accent); border-color: var(--accent); }
 .step-3 { color: var(--note); border-color: var(--note); }
 
-/* ---- ME-80 guide and patch cards */
+/* ---- ME-90 guide and patch cards */
 .me-guide { display: flex; flex-direction: column; gap: 10px; }
 .me-guide h3 { margin: 4px 0 0; }
 .me-types { display: flex; flex-direction: column; gap: 8px; }
@@ -392,7 +392,7 @@ p { margin: 0; }
 .met-beat-choices { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .met-beat-choices .chip { padding: 8px 0; min-width: 0; }
 
-/* ---- ME-80 hook-up */
+/* ---- ME-90 hook-up */
 .segmented.three { grid-template-columns: repeat(3, 1fr); }
 .hookup { display: flex; flex-direction: column; gap: 12px; }
 .hk-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
