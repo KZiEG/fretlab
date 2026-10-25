@@ -3,6 +3,11 @@
 A personal, mobile-first guitar theory app: learn the fretboard, chords and scales.
 Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge.
 
+- **Practice** – *Today*: a 20-minute daily routine in four 5-minute blocks (neck, scale, ear & melody,
+  improvise), each with a timer that keeps running across tabs and ticks the block off, a streak, a
+  last-7-days view, daily notes and history. *Guitar Projects*: goal-based pathways split into stages, each
+  with things to know, practice tasks, a milestone and links into the app; the first is **Melodic guitar**
+  (10 stages). Make your own projects too. The focus project feeds suggestions into each routine block.
 - **Trainer** – *Name the note*: a quiz where every fretboard position is a card with a level
   (Learning → Refined → Mastered). Weak, forgotten and unseen positions come up more often, and
   positions you leave alone slowly decay. *Find the note*: hands-free flashcards. One note at a time is shown on each
@@ -63,6 +68,8 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 | `src/me90howto.js` | ME-90 how-to topics (own words, from the ME-90 Reference Manual). |
 | `src/me90.js` | ME-90 guide content (own words, from the ME-90 Parameter Guide) and starter sounds. |
 | `src/rig.js` | Rig tab content: effects, pairings and starter settings (edit here to add effects). |
+| `src/practice.js` | Practice routine and Guitar Project pathways (Melodic guitar). |
+| `src/practiceTimer.js` | App-wide countdown for routine blocks. |
 | `src/metronome.js` | The app-wide metronome engine (lookahead scheduler, settings remembered). |
 | `src/mobile.js` | Phone helpers: vibration and the screen wake lock. |
 | `src/audio.js` | Plucked-string synth (Karplus-Strong), no audio files needed. |
