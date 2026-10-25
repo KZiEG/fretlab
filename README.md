@@ -5,7 +5,7 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
 
 - **Practice** – *Today*: a 20-minute daily routine in four 5-minute blocks (neck, scale, ear & melody,
   improvise), each with a timer that keeps running across tabs and ticks the block off, a streak, a
-  last-7-days view, daily notes and history. *Guitar Projects*: goal-based pathways split into stages, each
+  last-7-days view, which Guitar Projects you practised that day, daily notes and history. *Guitar Projects*: goal-based pathways split into stages, each
   with things to know, practice tasks, a milestone and links into the app; the first is **Melodic guitar**
   (10 stages). Make your own projects too. The focus project feeds suggestions into each routine block.
 - **Trainer** – *Name the note*: a quiz where every fretboard position is a card with a level

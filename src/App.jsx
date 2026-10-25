@@ -114,7 +114,7 @@ export default function App() {
       onTimerDone((blockId) =>
         updatePractice((pr) => {
           const today = dayKey()
-          const day = pr.days[today] ?? { blocks: {}, note: '' }
+          const day = pr.days[today] ?? { blocks: {}, note: '', projects: [] }
           return { ...pr, days: { ...pr.days, [today]: { ...day, blocks: { ...day.blocks, [blockId]: true } } } }
         }),
       ),

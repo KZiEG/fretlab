@@ -460,3 +460,5 @@ p { margin: 0; }
 .milestone.on { border-style: solid; border-color: var(--good); }
 .stage-tools { margin-top: 10px; }
 .tabbar a { font-size: 0.68rem; }
+.history-projects { color: var(--accent); font-weight: 600; }
+.practised { color: var(--note); }

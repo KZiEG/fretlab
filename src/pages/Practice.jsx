@@ -30,6 +30,17 @@ function currentStage(practice, p) {
   return i === -1 ? { stage: p.stages[p.stages.length - 1], index: p.stages.length - 1, finished: true } : { stage: p.stages[i], index: i, finished: false }
 }
 
+/** Days (newest first) on which a project was marked as practised. */
+function practisedDays(practice, pid) {
+  return Object.keys(practice.days).filter((k) => practice.days[k].projects?.includes(pid)).sort().reverse()
+}
+
+function practisedLine(practice, pid) {
+  const days = practisedDays(practice, pid)
+  if (!days.length) return 'Not practised yet'
+  return `Practised ${days.length} day${days.length === 1 ? '' : 's'} · last ${prettyDay(days[0])}`
+}
+
 function Bar({ value, total }) {
   return <div className="progress-bar"><span style={{ width: `${total ? (value / total) * 100 : 0}%` }} /></div>
 }
@@ -48,10 +59,15 @@ function Today({ practice, update, openProject }) {
 
   const setDay = (patch) => update((pr) => ({ ...pr, days: { ...pr.days, [today]: { blocks: {}, note: '', ...pr.days[today], ...patch } } }))
   const toggle = (id) => setDay({ blocks: { ...day.blocks, [id]: !day.blocks[id] } })
+  const dayProjects = day.projects ?? []
+  const toggleProject = (pid) =>
+    setDay({ projects: dayProjects.includes(pid) ? dayProjects.filter((x) => x !== pid) : [...dayProjects, pid] })
+  const projects = pathwaysOf(practice)
+  const nameOf = (pid) => projects.find((p) => p.id === pid)?.name
 
   const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6))
   const history = Object.keys(practice.days)
-    .filter((k) => k !== today && (Object.values(practice.days[k].blocks ?? {}).some(Boolean) || practice.days[k].note))
+    .filter((k) => k !== today && (Object.values(practice.days[k].blocks ?? {}).some(Boolean) || practice.days[k].note || practice.days[k].projects?.length))
     .sort()
     .reverse()
     .slice(0, 14)
@@ -121,6 +137,17 @@ function Today({ practice, update, openProject }) {
       })}
       <p className="muted small">When a timer finishes it chimes and ticks the block off. It keeps running if you switch tabs.</p>
 
+      <h3>Projects practised today</h3>
+      <p className="muted small">Tap the Guitar Projects you worked on today (you can pick more than one).</p>
+      <div className="chips">
+        {projects.map((p) => (
+          <button key={p.id} className={`chip${dayProjects.includes(p.id) ? ' on' : ''}`} onClick={() => toggleProject(p.id)}
+            aria-pressed={dayProjects.includes(p.id)}>
+            {dayProjects.includes(p.id) ? '✓ ' : ''}{p.name}
+          </button>
+        ))}
+      </div>
+
       <label className="field">
         <span>Notes for today</span>
         <textarea rows="3" value={day.note} placeholder="What went well? What to work on tomorrow?"
@@ -138,6 +165,9 @@ function Today({ practice, update, openProject }) {
                 <li key={k}>
                   <strong>{prettyDay(k)}</strong>
                   <span className="muted small">{n}/{ROUTINE.length} blocks · {n * 5} min</span>
+                  {d.projects?.length > 0 && (
+                    <span className="small history-projects">{d.projects.map(nameOf).filter(Boolean).join(' · ')}</span>
+                  )}
                   {d.note && <span className="small history-note">{d.note}</span>}
                 </li>
               )
@@ -165,6 +195,7 @@ function ProjectList({ practice, open, startNew }) {
               {practice.focus === p.id && <span className="badge-focus">Focus</span>}
             </div>
             <span className="small muted">{p.goal}</span>
+            <span className="small practised">{practisedLine(practice, p.id)}</span>
             <Bar value={pr.done} total={pr.total} />
             <span className="small">
               {pr.done}/{pr.total} done{p.stages.length > 1 && !cur.finished ? ` · Stage ${cur.index + 1}: ${cur.stage.title}` : ''}
@@ -227,7 +258,7 @@ function ProjectDetail({ practice, update, project: p, back }) {
       <h3 className="project-title">{p.name}</h3>
       <p>{p.goal}</p>
       <Bar value={pr.done} total={pr.total} />
-      <p className="muted small">{pr.done}/{pr.total} tasks and milestones done</p>
+      <p className="muted small">{pr.done}/{pr.total} tasks and milestones done · {practisedLine(practice, p.id)}</p>
       <div className="chips">
         {practice.focus === p.id
           ? <span className="badge-focus big">Daily focus ✓</span>
@@ -294,7 +325,12 @@ function ProjectDetail({ practice, update, project: p, back }) {
       {p.custom && (
         <button className="btn danger" onClick={() => {
           if (!window.confirm(`Delete “${p.name}”?`)) return
-          update((x) => ({ ...x, custom: x.custom.filter((c) => c.id !== p.id), focus: x.focus === p.id ? 'melodic' : x.focus }))
+          update((x) => ({
+            ...x,
+            custom: x.custom.filter((c) => c.id !== p.id),
+            focus: x.focus === p.id ? 'melodic' : x.focus,
+            days: Object.fromEntries(Object.entries(x.days).map(([k, d]) => [k, { ...d, projects: (d.projects ?? []).filter((id) => id !== p.id) }])),
+          }))
           back()
         }}>Delete project</button>
       )}
