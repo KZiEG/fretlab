@@ -34,7 +34,11 @@ export const defaultSettings = {
 }
 
 export function emptyState() {
-  return { version: 1, cells: {}, xp: 0, days: {}, drills: {}, patches: [], settings: { ...defaultSettings } }
+  return {
+    version: 1, cells: {}, xp: 0, days: {}, drills: {}, patches: [],
+    practice: { days: {}, projects: {}, custom: [], focus: 'melodic' },
+    settings: { ...defaultSettings },
+  }
 }
 
 export function loadState() {

@@ -47,7 +47,7 @@ p { margin: 0; }
 /* ---- bottom navigation */
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  display: grid; grid-template-columns: repeat(6, 1fr);
+  display: grid; grid-template-columns: repeat(7, 1fr);
   background: var(--panel); border-top: 1px solid var(--line);
   padding-bottom: var(--safe-bottom);
 }
@@ -186,7 +186,7 @@ p { margin: 0; }
 
 @media (min-width: 820px) {
   .voicing-grid { grid-template-columns: repeat(3, 1fr); }
-  .note-grid { grid-template-columns: repeat(6, 1fr); }
+  .note-grid { grid-template-columns: repeat(7, 1fr); }
 }
 
 /* ---- descriptions, arrows, shortcuts */
@@ -413,3 +413,52 @@ p { margin: 0; }
 .howto-topic[open] summary { margin-bottom: 8px; color: var(--accent); }
 .howto-topic h4 { margin: 12px 0 6px; }
 .howto-intro { margin-bottom: 8px; }
+
+/* ---- practice */
+.topbar-badges { display: inline-flex; gap: 6px; align-items: center; }
+.timer-badge { text-decoration: none; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.week-day { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.week-day.today .muted { color: var(--accent); font-weight: 700; }
+.week-dot {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line);
+  background: conic-gradient(var(--good) var(--fill), transparent 0);
+}
+.focus-card, .project-card {
+  text-align: left; font: inherit; color: var(--text); cursor: pointer; display: flex; flex-direction: column; gap: 6px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+}
+.focus-card { border-color: var(--accent); }
+.project-card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.badge-focus { background: var(--accent); color: var(--accent-ink); font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+.badge-focus.big { font-size: 0.9rem; padding: 8px 14px; }
+.block { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.block.done { border-color: var(--good); }
+.block.done strong { color: var(--good); }
+.block-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.block-check { margin-top: 0; }
+.block-tip { font-size: 0.9rem; background: var(--panel-2); border-radius: 8px; padding: 6px 10px; }
+.block-tip span { color: var(--accent); font-weight: 700; }
+.field textarea { padding: 10px; border-radius: 10px; font: inherit; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); resize: vertical; }
+.history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.history li { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.history-note { opacity: 0.85; }
+.chip.back { align-self: flex-start; }
+.project-title { margin: 4px 0 0; }
+.stage summary { display: flex; align-items: center; gap: 10px; }
+.stage summary::-webkit-details-marker { display: none; }
+.stage summary { list-style: none; }
+.stage-num { min-width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800; color: var(--accent); }
+.stage.complete .stage-num { background: var(--good); color: #06180d; }
+.stage-title { flex: 1; }
+.stage[open] .stage-title { color: var(--accent); }
+.stage h4 { margin: 12px 0 6px; }
+.tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.tasks .check, .milestone { margin-top: 6px; align-items: flex-start; }
+.tasks .check input, .milestone input { flex: 0 0 auto; margin-top: 2px; }
+.milestone { background: var(--panel-2); border: 1px dashed var(--accent); border-radius: 10px; padding: 8px 10px; margin-top: 10px; }
+.milestone.on { border-style: solid; border-color: var(--good); }
+.stage-tools { margin-top: 10px; }
+.tabbar a { font-size: 0.68rem; }
+.history-projects { color: var(--accent); font-weight: 600; }
+.practised { color: var(--note); }
