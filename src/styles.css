@@ -116,6 +116,8 @@ p { margin: 0; }
 .mark-correct circle { fill: var(--good); }
 .mark-wrong circle { fill: var(--bad); }
 .mark-wrong text { fill: #fff; }
+.mark-alt circle { fill: transparent; stroke: var(--note); stroke-width: 2; stroke-dasharray: 3 3; }
+.mark-alt text { fill: var(--note); }
 .mark-ghost circle { fill: #3a4050; r: 5; opacity: 0.8; }
 .mark-heat circle { opacity: 0.95; }
 @keyframes pulse { 50% { opacity: 0.55; } }

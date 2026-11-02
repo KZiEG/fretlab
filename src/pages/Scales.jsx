@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import scaleData from '../data/scales.json'
 import Fretboard from '../components/Fretboard.jsx'
-import { MAX_FRET, OPEN_MIDI, noteLabel, pcAt, spellDegrees } from '../theory.js'
+import { MAX_FRET, OPEN_MIDI, midiAt, noteLabel, pcAt, spellDegrees } from '../theory.js'
 import { playSequence, unlockAudio } from '../audio.js'
 
 // Size of each step between scale notes, in semitones (= frets on one string)
@@ -55,6 +55,27 @@ export default function Scales() {
   const names = spellDegrees(root, scale.intervals, scale.degrees) // names[i] spells pcs[i]
   const activeWindow = pos === 'all' ? null : windows[pos] ?? null
 
+  // Inside a position box the same pitch can appear on two neighbouring strings (the G and
+  // B strings are only 4 frets apart). Keep one as the note to play and mark the other as an
+  // alternative: drop it from the string that has more notes, so each string keeps 2-3 notes;
+  // on a tie keep the higher string's note, as box fingerings usually do.
+  const alternates = useMemo(() => {
+    const alt = new Set()
+    if (!activeWindow) return alt
+    const [lo, hi] = activeWindow
+    const inBox = []
+    for (let s = 0; s < 6; s++) for (let f = lo; f <= hi; f++) if (pcs.includes(pcAt(s, f))) inBox.push({ s, f })
+    const perString = (s) => inBox.filter((n) => n.s === s).length
+    const byPitch = new Map()
+    for (const n of inBox) byPitch.set(midiAt(n.s, n.f), [...(byPitch.get(midiAt(n.s, n.f)) ?? []), n])
+    for (const group of byPitch.values()) {
+      if (group.length < 2) continue
+      const keep = [...group].sort((a, b) => perString(a.s) - perString(b.s) || b.s - a.s)[0]
+      for (const n of group) if (n !== keep) alt.add(`${n.s}-${n.f}`)
+    }
+    return alt
+  }, [root, scaleId, pos]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const marks = useMemo(() => {
     const out = []
     for (let s = 0; s < 6; s++) {
@@ -62,15 +83,16 @@ export default function Scales() {
         const idx = pcs.indexOf(pcAt(s, f))
         if (idx < 0) continue
         const inside = !activeWindow || (f >= activeWindow[0] && f <= activeWindow[1])
+        const alt = inside && alternates.has(`${s}-${f}`)
         out.push({
           s, f,
-          kind: !inside ? 'ghost' : idx === 0 ? 'root' : 'note',
+          kind: !inside ? 'ghost' : alt ? 'alt' : idx === 0 ? 'root' : 'note',
           label: !inside ? null : labels === 'note' ? names[idx] : scale.degrees[idx],
         })
       }
     }
     return out
-  }, [root, scaleId, pos, labels]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [root, scaleId, pos, labels, alternates]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function play() {
     unlockAudio()
@@ -129,6 +151,12 @@ export default function Scales() {
       </div>
 
       <Fretboard frets={MAX_FRET} marks={marks} />
+      {alternates.size > 0 && (
+        <p className="muted small">
+          Dashed notes are the same pitch as a note on the next string, so play one or the other. The solid one keeps
+          two or three notes per string, the usual way to finger the box.
+        </p>
+      )}
 
       <p className="muted small">
         Red dots are the root. Position boxes group the scale into small, playable chunks — learn one box at a time,
