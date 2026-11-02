@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import scaleData from '../data/scales.json'
 import Fretboard from '../components/Fretboard.jsx'
 import { MAX_FRET, OPEN_MIDI, midiAt, noteLabel, pcAt, spellDegrees } from '../theory.js'
+import { boxPositions, threeNpsPositions } from '../scalePositions.js'
 import { playSequence, unlockAudio } from '../audio.js'
 
 // Size of each step between scale notes, in semitones (= frets on one string)
@@ -46,56 +47,48 @@ function ScalePattern({ notes, intervals }) {
 export default function Scales() {
   const [root, setRoot] = useState(9)
   const [scaleId, setScaleId] = useState('minpent')
-  const [pos, setPos] = useState('all') // 'all' or window index
+  const [pos, setPos] = useState('all') // 'all' or a position number
+  const [system, setSystem] = useState('box') // 'box' | 'nps' (3 notes per string, 7-note scales)
   const [labels, setLabels] = useState('note') // 'note' | 'degree'
 
   const scale = scaleData.scales.find((s) => s.id === scaleId)
-  const windows = scaleData.windows[root][scaleId]
   const pcs = scale.intervals.map((i) => (root + i) % 12)
   const names = spellDegrees(root, scale.intervals, scale.degrees) // names[i] spells pcs[i]
-  const activeWindow = pos === 'all' ? null : windows[pos] ?? null
-
-  // Inside a position box the same pitch can appear on two neighbouring strings (the G and
-  // B strings are only 4 frets apart). Keep one as the note to play and mark the other as an
-  // alternative: drop it from the string that has more notes, so each string keeps 2-3 notes;
-  // on a tie keep the higher string's note, as box fingerings usually do.
-  const alternates = useMemo(() => {
-    const alt = new Set()
-    if (!activeWindow) return alt
-    const [lo, hi] = activeWindow
-    const inBox = []
-    for (let s = 0; s < 6; s++) for (let f = lo; f <= hi; f++) if (pcs.includes(pcAt(s, f))) inBox.push({ s, f })
-    const perString = (s) => inBox.filter((n) => n.s === s).length
-    const byPitch = new Map()
-    for (const n of inBox) byPitch.set(midiAt(n.s, n.f), [...(byPitch.get(midiAt(n.s, n.f)) ?? []), n])
-    for (const group of byPitch.values()) {
-      if (group.length < 2) continue
-      const keep = [...group].sort((a, b) => perString(a.s) - perString(b.s) || b.s - a.s)[0]
-      for (const n of group) if (n !== keep) alt.add(`${n.s}-${n.f}`)
-    }
-    return alt
-  }, [root, scaleId, pos]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sevenNote = scale.intervals.length === 7
+  const useNps = sevenNote && system === 'nps'
+  const positions = useMemo(
+    () => (useNps ? threeNpsPositions(root, scale) : boxPositions(root, scale)),
+    [root, scaleId, useNps], // eslint-disable-line react-hooks/exhaustive-deps
+  )
+  const position = pos === 'all' ? null : positions.find((p) => p.n === pos) ?? null
+  // some positions climb past the 15th fret: draw the neck long enough for them
+  const frets = Math.max(MAX_FRET, position?.to ?? 0)
 
   const marks = useMemo(() => {
+    const inPos = position && new Set(position.notes.map((n) => `${n.s}-${n.f}`))
     const out = []
     for (let s = 0; s < 6; s++) {
-      for (let f = 0; f <= MAX_FRET; f++) {
+      for (let f = 0; f <= frets; f++) {
         const idx = pcs.indexOf(pcAt(s, f))
         if (idx < 0) continue
-        const inside = !activeWindow || (f >= activeWindow[0] && f <= activeWindow[1])
-        const alt = inside && alternates.has(`${s}-${f}`)
+        const inside = !inPos || inPos.has(`${s}-${f}`)
         out.push({
           s, f,
-          kind: !inside ? 'ghost' : alt ? 'alt' : idx === 0 ? 'root' : 'note',
+          kind: !inside ? 'ghost' : idx === 0 ? 'root' : 'note',
           label: !inside ? null : labels === 'note' ? names[idx] : scale.degrees[idx],
         })
       }
     }
     return out
-  }, [root, scaleId, pos, labels, alternates]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [root, scaleId, position, frets, labels]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function play() {
     unlockAudio()
+    if (position) {
+      const up = position.notes.map((n) => midiAt(n.s, n.f)).sort((x, y) => x - y)
+      playSequence([...up, ...up.slice(0, -1).reverse()], 0.24)
+      return
+    }
     const start = OPEN_MIDI[0] + ((root - 4 + 12) % 12)
     const up = [...scale.intervals, 12].map((i) => start + i)
     playSequence([...up, ...up.slice(0, -1).reverse()], 0.26)
@@ -136,11 +129,17 @@ export default function Scales() {
       <ScalePattern notes={[...names, names[0]]} intervals={scale.intervals} />
 
       <h4>Position</h4>
+      {sevenNote && (
+        <div className="segmented small">
+          <button className={system === 'box' ? 'on' : ''} onClick={() => { setSystem('box'); setPos('all') }}>Box positions</button>
+          <button className={system === 'nps' ? 'on' : ''} onClick={() => { setSystem('nps'); setPos('all') }}>3 notes per string</button>
+        </div>
+      )}
       <div className="chips scroll">
         <button className={`chip${pos === 'all' ? ' on' : ''}`} onClick={() => setPos('all')}>Whole neck</button>
-        {windows.map((w, i) => (
-          <button key={i} className={`chip${pos === i ? ' on' : ''}`} onClick={() => setPos(i)}>
-            Frets {w[0]}–{w[1]}
+        {positions.map((p) => (
+          <button key={p.n} className={`chip${pos === p.n ? ' on' : ''}`} onClick={() => setPos(p.n)}>
+            Position {p.n} <span className="chip-sub">fr {p.from}–{p.to}</span>
           </button>
         ))}
       </div>
@@ -150,17 +149,13 @@ export default function Scales() {
         <button className={labels === 'degree' ? 'on' : ''} onClick={() => setLabels('degree')}>Scale degrees</button>
       </div>
 
-      <Fretboard frets={MAX_FRET} marks={marks} />
-      {alternates.size > 0 && (
-        <p className="muted small">
-          Dashed notes are the same pitch as a note on the next string, so play one or the other. The solid one keeps
-          two or three notes per string, the usual way to finger the box.
-        </p>
-      )}
+      <Fretboard frets={frets} marks={marks} />
 
       <p className="muted small">
-        Red dots are the root. Position boxes group the scale into small, playable chunks — learn one box at a time,
-        then link neighbouring boxes together.
+        {useNps
+          ? 'Each 3-notes-per-string position starts on the next note of the scale on the low E string and keeps exactly three notes on every string: very even for speed and legato, with wider stretches.'
+          : 'Each position starts on the next scale note up the low E string and climbs string by string, two notes per string for pentatonic scales and two or three for seven-note scales. Positions overlap: the top of one is the bottom of the next, which is how you link them up the neck.'}{' '}
+        Red dots are the root. With a position selected, Play runs up and down that shape.
       </p>
     </div>
   )
