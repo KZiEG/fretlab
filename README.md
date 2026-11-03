@@ -22,8 +22,9 @@ Inspired by GuitarDex's "levels that decay" idea, applied to fretboard knowledge
   show every chord tone on the whole neck. A **Triads** mode shows major, minor, diminished
   and augmented triads on each set of three neighbouring strings, in all three inversions.
 - **Scales** – 11 scales in all 12 keys, with the scale pattern (whole and half steps, e.g. W W H W W W H)
-  under the name, shown across the whole neck or one position "box"
-  at a time (other notes are dimmed for context). Note names or scale degrees. Playable.
+  under the name, shown across the whole neck or one position at a time
+  (other notes are dimmed for context): box positions 1–5, or 3-notes-per-string positions for seven-note scales,
+  worked out from the scale itself so each note appears once. Note names or scale degrees. Playable.
 - **Fretboard** – *Octave shortcuts*: four patterns for finding the same note an octave (or two)
   higher, each with the rule, why it works, and an interactive fretboard with an arrow you can
   step along. *Timed drills*: (1) walk the natural notes along a string, (2) find 1-3 notes on
@@ -63,6 +64,7 @@ npm run dev        # http://localhost:5173, also reachable from your phone on th
 |---|---|
 | `tools/generate_data.py` | Python: searches for chord voicings, triad shapes and scale position boxes, writes `src/data/*.json`. Re-run with `npm run data` after changing it. |
 | `tools/make_icons.py` | Python: draws the PWA icons in `public/`. |
+| `src/scalePositions.js` | Builds scale positions (boxes 1–5 and 3-notes-per-string) by walking the scale up the strings. |
 | `src/theory.js` | Notes, tuning, helpers. |
 | `src/progress.js` | XP, levels, streaks and the decay model (constants at the top). |
 | `src/me90howto.js` | ME-90 how-to topics (own words, from the ME-90 Reference Manual). |

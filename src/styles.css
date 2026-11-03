@@ -462,3 +462,4 @@ p { margin: 0; }
 .tabbar a { font-size: 0.68rem; }
 .history-projects { color: var(--accent); font-weight: 600; }
 .practised { color: var(--note); }
+.chip-sub { font-size: 0.75rem; opacity: 0.75; margin-left: 4px; }
